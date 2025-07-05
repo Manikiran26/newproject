@@ -19,7 +19,8 @@ type AppAction =
   | { type: 'ADD_APOLOGY'; payload: Apology }
   | { type: 'UPDATE_PREFERENCES'; payload: Partial<UserPreferences> }
   | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_VIEW'; payload: string };
+  | { type: 'SET_VIEW'; payload: string }
+  | { type: 'CLEAR_ALL_DATA' };
 
 const initialState: AppState = {
   excuses: [],
@@ -59,6 +60,14 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, isLoading: action.payload };
     case 'SET_VIEW':
       return { ...state, currentView: action.payload };
+    case 'CLEAR_ALL_DATA':
+      return {
+        ...state,
+        excuses: [],
+        savedExcuses: [],
+        emergencyAlerts: [],
+        apologies: []
+      };
     default:
       return state;
   }

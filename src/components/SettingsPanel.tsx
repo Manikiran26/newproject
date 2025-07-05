@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { useTranslation } from '../utils/translations';
 import { 
@@ -23,10 +23,34 @@ export default function SettingsPanel() {
     });
   };
 
+  // Apply theme changes to document
+  useEffect(() => {
+    const root = document.documentElement;
+    if (state.preferences.theme === 'light') {
+      root.classList.add('light-theme');
+      root.classList.remove('dark-theme');
+    } else {
+      root.classList.add('dark-theme');
+      root.classList.remove('light-theme');
+    }
+  }, [state.preferences.theme]);
+
   const languages = [
-    { code: 'en', name: 'English' },
-    { code: 'es', name: 'Español' },
-    { code: 'fr', name: 'Français' }
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'es', name: 'Español', flag: '🇪🇸' },
+    { code: 'fr', name: 'Français', flag: '🇫🇷' },
+    { code: 'hi', name: 'हिन्दी (Hindi)', flag: '🇮🇳' },
+    { code: 'ml', name: 'മലയാളം (Malayalam)', flag: '🇮🇳' },
+    { code: 'te', name: 'తెలుగు (Telugu)', flag: '🇮🇳' },
+    { code: 'ta', name: 'தமிழ் (Tamil)', flag: '🇮🇳' },
+    { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+    { code: 'it', name: 'Italiano', flag: '🇮🇹' },
+    { code: 'pt', name: 'Português', flag: '🇵🇹' },
+    { code: 'ru', name: 'Русский', flag: '🇷🇺' },
+    { code: 'ja', name: '日本語', flag: '🇯🇵' },
+    { code: 'ko', name: '한국어', flag: '🇰🇷' },
+    { code: 'zh', name: '中文', flag: '🇨🇳' },
+    { code: 'ar', name: 'العربية', flag: '🇸🇦' }
   ];
 
   const categories = [
@@ -40,59 +64,117 @@ export default function SettingsPanel() {
     { value: 'personal', label: 'Personal', icon: '👤' }
   ];
 
+  const getCurrentLanguageName = () => {
+    const currentLang = languages.find(lang => lang.code === state.preferences.defaultLanguage);
+    return currentLang ? `${currentLang.flag} ${currentLang.name}` : 'English';
+  };
+
+  const handleClearAllData = () => {
+    if (window.confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
+      // Clear all data by dispatching multiple actions
+      dispatch({ type: 'CLEAR_ALL_DATA' });
+      alert('All data has been cleared successfully.');
+    }
+  };
+
   return (
-    <div className="p-8">
+    <div className={`p-8 min-h-screen transition-colors duration-300 ${
+      state.preferences.theme === 'light' 
+        ? 'bg-gradient-to-br from-gray-50 via-blue-50 to-gray-50' 
+        : 'bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900'
+    }`}>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Settings</h1>
-        <p className="text-slate-400">Customize your excuse generator preferences</p>
+        <h1 className={`text-3xl font-bold mb-2 ${
+          state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+        }`}>
+          {t('settings')}
+        </h1>
+        <p className={`${
+          state.preferences.theme === 'light' ? 'text-gray-600' : 'text-slate-400'
+        }`}>
+          Customize your excuse generator preferences
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* General Settings */}
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700 p-6">
+        <div className={`backdrop-blur-sm rounded-xl border p-6 ${
+          state.preferences.theme === 'light' 
+            ? 'bg-white/70 border-gray-200' 
+            : 'bg-slate-800/50 border-slate-700'
+        }`}>
           <div className="flex items-center space-x-3 mb-6">
-            <Settings className="w-6 h-6 text-blue-400" />
-            <h2 className="text-xl font-semibold text-white">General Settings</h2>
+            <Settings className={`w-6 h-6 ${
+              state.preferences.theme === 'light' ? 'text-blue-600' : 'text-blue-400'
+            }`} />
+            <h2 className={`text-xl font-semibold ${
+              state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+            }`}>
+              General Settings
+            </h2>
           </div>
 
           <div className="space-y-6">
             {/* Language */}
             <div>
-              <label className="flex items-center space-x-2 text-sm font-medium text-slate-300 mb-3">
+              <label className={`flex items-center space-x-2 text-sm font-medium mb-3 ${
+                state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
+              }`}>
                 <Globe className="w-4 h-4" />
                 <span>Default Language</span>
               </label>
-              <select
-                value={state.preferences.defaultLanguage}
-                onChange={(e) => handlePreferenceUpdate('defaultLanguage', e.target.value)}
-                className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-              >
-                {languages.map((lang) => (
-                  <option key={lang.code} value={lang.code}>
-                    {lang.name}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <select
+                  value={state.preferences.defaultLanguage}
+                  onChange={(e) => handlePreferenceUpdate('defaultLanguage', e.target.value)}
+                  className={`w-full p-3 rounded-lg border focus:ring-1 transition-colors ${
+                    state.preferences.theme === 'light'
+                      ? 'bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500'
+                      : 'bg-slate-700 border-slate-600 text-white focus:border-blue-500 focus:ring-blue-500'
+                  }`}
+                >
+                  {languages.map((lang) => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.flag} {lang.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <p className={`text-xs mt-2 ${
+                state.preferences.theme === 'light' ? 'text-gray-500' : 'text-slate-400'
+              }`}>
+                Current: {getCurrentLanguageName()}
+              </p>
             </div>
 
             {/* Theme */}
             <div>
-              <label className="flex items-center space-x-2 text-sm font-medium text-slate-300 mb-3">
+              <label className={`flex items-center space-x-2 text-sm font-medium mb-3 ${
+                state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
+              }`}>
                 <Palette className="w-4 h-4" />
                 <span>Theme</span>
               </label>
-              <div className="grid grid-cols-2 gap-2">
-                {['dark', 'light'].map((theme) => (
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { value: 'dark', label: 'Dark Mode', icon: '🌙' },
+                  { value: 'light', label: 'Light Mode', icon: '☀️' }
+                ].map((theme) => (
                   <button
-                    key={theme}
-                    onClick={() => handlePreferenceUpdate('theme', theme)}
-                    className={`p-3 rounded-lg border transition-all duration-200 capitalize ${
-                      state.preferences.theme === theme
-                        ? 'bg-blue-600/20 border-blue-500 text-blue-300'
-                        : 'bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700'
+                    key={theme.value}
+                    onClick={() => handlePreferenceUpdate('theme', theme.value)}
+                    className={`flex items-center justify-center space-x-2 p-4 rounded-lg border transition-all duration-200 ${
+                      state.preferences.theme === theme.value
+                        ? state.preferences.theme === 'light'
+                          ? 'bg-blue-100 border-blue-300 text-blue-700'
+                          : 'bg-blue-600/20 border-blue-500 text-blue-300'
+                        : state.preferences.theme === 'light'
+                          ? 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+                          : 'bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700'
                     }`}
                   >
-                    {theme}
+                    <span className="text-lg">{theme.icon}</span>
+                    <span className="font-medium">{theme.label}</span>
                   </button>
                 ))}
               </div>
@@ -100,14 +182,18 @@ export default function SettingsPanel() {
 
             {/* Voice */}
             <div className="flex items-center justify-between">
-              <label className="flex items-center space-x-2 text-sm font-medium text-slate-300">
+              <label className={`flex items-center space-x-2 text-sm font-medium ${
+                state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
+              }`}>
                 <Volume2 className="w-4 h-4" />
                 <span>Voice Playback</span>
               </label>
               <button
                 onClick={() => handlePreferenceUpdate('voiceEnabled', !state.preferences.voiceEnabled)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  state.preferences.voiceEnabled ? 'bg-blue-600' : 'bg-slate-600'
+                  state.preferences.voiceEnabled 
+                    ? 'bg-blue-600' 
+                    : state.preferences.theme === 'light' ? 'bg-gray-300' : 'bg-slate-600'
                 }`}
               >
                 <span
@@ -120,14 +206,18 @@ export default function SettingsPanel() {
 
             {/* Auto Proof Generation */}
             <div className="flex items-center justify-between">
-              <label className="flex items-center space-x-2 text-sm font-medium text-slate-300">
+              <label className={`flex items-center space-x-2 text-sm font-medium ${
+                state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
+              }`}>
                 <Shield className="w-4 h-4" />
                 <span>Auto-generate Proof</span>
               </label>
               <button
                 onClick={() => handlePreferenceUpdate('autoProofGeneration', !state.preferences.autoProofGeneration)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  state.preferences.autoProofGeneration ? 'bg-emerald-600' : 'bg-slate-600'
+                  state.preferences.autoProofGeneration 
+                    ? 'bg-emerald-600' 
+                    : state.preferences.theme === 'light' ? 'bg-gray-300' : 'bg-slate-600'
                 }`}
               >
                 <span
@@ -140,14 +230,18 @@ export default function SettingsPanel() {
 
             {/* Emergency Contacts */}
             <div className="flex items-center justify-between">
-              <label className="flex items-center space-x-2 text-sm font-medium text-slate-300">
+              <label className={`flex items-center space-x-2 text-sm font-medium ${
+                state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
+              }`}>
                 <Bell className="w-4 h-4" />
                 <span>Emergency Contacts</span>
               </label>
               <button
                 onClick={() => handlePreferenceUpdate('emergencyContactsEnabled', !state.preferences.emergencyContactsEnabled)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  state.preferences.emergencyContactsEnabled ? 'bg-red-600' : 'bg-slate-600'
+                  state.preferences.emergencyContactsEnabled 
+                    ? 'bg-red-600' 
+                    : state.preferences.theme === 'light' ? 'bg-gray-300' : 'bg-slate-600'
                 }`}
               >
                 <span
@@ -161,13 +255,25 @@ export default function SettingsPanel() {
         </div>
 
         {/* Category Preferences */}
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700 p-6">
+        <div className={`backdrop-blur-sm rounded-xl border p-6 ${
+          state.preferences.theme === 'light' 
+            ? 'bg-white/70 border-gray-200' 
+            : 'bg-slate-800/50 border-slate-700'
+        }`}>
           <div className="flex items-center space-x-3 mb-6">
-            <User className="w-6 h-6 text-emerald-400" />
-            <h2 className="text-xl font-semibold text-white">Preferred Categories</h2>
+            <User className={`w-6 h-6 ${
+              state.preferences.theme === 'light' ? 'text-emerald-600' : 'text-emerald-400'
+            }`} />
+            <h2 className={`text-xl font-semibold ${
+              state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+            }`}>
+              Preferred Categories
+            </h2>
           </div>
 
-          <p className="text-slate-400 text-sm mb-4">
+          <p className={`text-sm mb-4 ${
+            state.preferences.theme === 'light' ? 'text-gray-600' : 'text-slate-400'
+          }`}>
             Select your most commonly used excuse categories for faster generation
           </p>
 
@@ -186,8 +292,12 @@ export default function SettingsPanel() {
                   }}
                   className={`flex items-center space-x-2 p-3 rounded-lg border transition-all duration-200 ${
                     isSelected
-                      ? 'bg-emerald-600/20 border-emerald-500 text-emerald-300'
-                      : 'bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700'
+                      ? state.preferences.theme === 'light'
+                        ? 'bg-emerald-100 border-emerald-300 text-emerald-700'
+                        : 'bg-emerald-600/20 border-emerald-500 text-emerald-300'
+                      : state.preferences.theme === 'light'
+                        ? 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+                        : 'bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700'
                   }`}
                 >
                   <span>{category.icon}</span>
@@ -199,45 +309,104 @@ export default function SettingsPanel() {
         </div>
 
         {/* Data Management */}
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700 p-6">
+        <div className={`backdrop-blur-sm rounded-xl border p-6 ${
+          state.preferences.theme === 'light' 
+            ? 'bg-white/70 border-gray-200' 
+            : 'bg-slate-800/50 border-slate-700'
+        }`}>
           <div className="flex items-center space-x-3 mb-6">
-            <Database className="w-6 h-6 text-purple-400" />
-            <h2 className="text-xl font-semibold text-white">Data Management</h2>
+            <Database className={`w-6 h-6 ${
+              state.preferences.theme === 'light' ? 'text-purple-600' : 'text-purple-400'
+            }`} />
+            <h2 className={`text-xl font-semibold ${
+              state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+            }`}>
+              Data Management
+            </h2>
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between py-3 border-b border-slate-600">
+            <div className={`flex items-center justify-between py-3 border-b ${
+              state.preferences.theme === 'light' ? 'border-gray-200' : 'border-slate-600'
+            }`}>
               <div>
-                <h3 className="font-medium text-white">Generated Excuses</h3>
-                <p className="text-sm text-slate-400">{state.excuses.length} items</p>
+                <h3 className={`font-medium ${
+                  state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+                }`}>
+                  Generated Excuses
+                </h3>
+                <p className={`text-sm ${
+                  state.preferences.theme === 'light' ? 'text-gray-500' : 'text-slate-400'
+                }`}>
+                  {state.excuses.length} items
+                </p>
               </div>
-              <button className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors text-sm">
+              <button className={`px-4 py-2 rounded-lg transition-colors text-sm ${
+                state.preferences.theme === 'light'
+                  ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                  : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+              }`}>
                 Export
               </button>
             </div>
 
-            <div className="flex items-center justify-between py-3 border-b border-slate-600">
+            <div className={`flex items-center justify-between py-3 border-b ${
+              state.preferences.theme === 'light' ? 'border-gray-200' : 'border-slate-600'
+            }`}>
               <div>
-                <h3 className="font-medium text-white">Saved Excuses</h3>
-                <p className="text-sm text-slate-400">{state.savedExcuses.length} items</p>
+                <h3 className={`font-medium ${
+                  state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+                }`}>
+                  Saved Excuses
+                </h3>
+                <p className={`text-sm ${
+                  state.preferences.theme === 'light' ? 'text-gray-500' : 'text-slate-400'
+                }`}>
+                  {state.savedExcuses.length} items
+                </p>
               </div>
-              <button className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors text-sm">
+              <button className={`px-4 py-2 rounded-lg transition-colors text-sm ${
+                state.preferences.theme === 'light'
+                  ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                  : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+              }`}>
                 Export
               </button>
             </div>
 
-            <div className="flex items-center justify-between py-3 border-b border-slate-600">
+            <div className={`flex items-center justify-between py-3 border-b ${
+              state.preferences.theme === 'light' ? 'border-gray-200' : 'border-slate-600'
+            }`}>
               <div>
-                <h3 className="font-medium text-white">Emergency Alerts</h3>
-                <p className="text-sm text-slate-400">{state.emergencyAlerts.length} items</p>
+                <h3 className={`font-medium ${
+                  state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+                }`}>
+                  Emergency Alerts
+                </h3>
+                <p className={`text-sm ${
+                  state.preferences.theme === 'light' ? 'text-gray-500' : 'text-slate-400'
+                }`}>
+                  {state.emergencyAlerts.length} items
+                </p>
               </div>
-              <button className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors text-sm">
+              <button className={`px-4 py-2 rounded-lg transition-colors text-sm ${
+                state.preferences.theme === 'light'
+                  ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                  : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+              }`}>
                 Clear All
               </button>
             </div>
 
             <div className="pt-4">
-              <button className="w-full px-4 py-3 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/50 rounded-lg transition-colors">
+              <button 
+                onClick={handleClearAllData}
+                className={`w-full px-4 py-3 border rounded-lg transition-colors ${
+                  state.preferences.theme === 'light'
+                    ? 'bg-red-50 hover:bg-red-100 text-red-600 border-red-200'
+                    : 'bg-red-600/20 hover:bg-red-600/30 text-red-400 border-red-500/50'
+                }`}
+              >
                 Clear All Data
               </button>
             </div>
@@ -245,10 +414,20 @@ export default function SettingsPanel() {
         </div>
 
         {/* About */}
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700 p-6">
-          <h2 className="text-xl font-semibold text-white mb-6">About ExcuseAI</h2>
+        <div className={`backdrop-blur-sm rounded-xl border p-6 ${
+          state.preferences.theme === 'light' 
+            ? 'bg-white/70 border-gray-200' 
+            : 'bg-slate-800/50 border-slate-700'
+        }`}>
+          <h2 className={`text-xl font-semibold mb-6 ${
+            state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+          }`}>
+            About ExcuseAI
+          </h2>
           
-          <div className="space-y-4 text-sm text-slate-300">
+          <div className={`space-y-4 text-sm ${
+            state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
+          }`}>
             <p>
               ExcuseAI is an advanced excuse generation system powered by artificial intelligence. 
               It creates context-aware, believable excuses tailored to your specific situation.
@@ -256,21 +435,37 @@ export default function SettingsPanel() {
             
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-slate-400">Version:</span>
+                <span className={state.preferences.theme === 'light' ? 'text-gray-500' : 'text-slate-400'}>
+                  Version:
+                </span>
                 <span>1.0.0</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Build:</span>
+                <span className={state.preferences.theme === 'light' ? 'text-gray-500' : 'text-slate-400'}>
+                  Build:
+                </span>
                 <span>2024.01.15</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Language:</span>
-                <span className="capitalize">{state.preferences.defaultLanguage}</span>
+                <span className={state.preferences.theme === 'light' ? 'text-gray-500' : 'text-slate-400'}>
+                  Language:
+                </span>
+                <span className="capitalize">{getCurrentLanguageName()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className={state.preferences.theme === 'light' ? 'text-gray-500' : 'text-slate-400'}>
+                  Theme:
+                </span>
+                <span className="capitalize">{state.preferences.theme} Mode</span>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-slate-600">
-              <p className="text-xs text-slate-400">
+            <div className={`pt-4 border-t ${
+              state.preferences.theme === 'light' ? 'border-gray-200' : 'border-slate-600'
+            }`}>
+              <p className={`text-xs ${
+                state.preferences.theme === 'light' ? 'text-gray-500' : 'text-slate-400'
+              }`}>
                 ⚠️ This tool is for entertainment purposes only. Use responsibly and ethically. 
                 Do not use generated content for deceptive or harmful purposes.
               </p>
