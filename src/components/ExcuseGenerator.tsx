@@ -10,7 +10,10 @@ import {
   Volume2, 
   RefreshCw,
   TrendingUp,
-  Clock
+  Clock,
+  Check,
+  X,
+  ExternalLink
 } from 'lucide-react';
 
 export default function ExcuseGenerator() {
@@ -24,6 +27,10 @@ export default function ExcuseGenerator() {
   });
   const [currentExcuse, setCurrentExcuse] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const handleGenerate = async () => {
     setIsGenerating(true);
@@ -40,13 +47,98 @@ export default function ExcuseGenerator() {
   const handleSave = () => {
     if (currentExcuse) {
       dispatch({ type: 'SAVE_EXCUSE', payload: currentExcuse });
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2000);
     }
   };
 
   const handleCopy = async () => {
     if (currentExcuse) {
-      await navigator.clipboard.writeText(currentExcuse.content);
+      try {
+        await navigator.clipboard.writeText(currentExcuse.content);
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000);
+      } catch (err) {
+        console.error('Failed to copy text: ', err);
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = currentExcuse.content;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000);
+      }
     }
+  };
+
+  const handleVoice = () => {
+    if (currentExcuse && 'speechSynthesis' in window) {
+      if (isPlaying) {
+        // Stop current speech
+        window.speechSynthesis.cancel();
+        setIsPlaying(false);
+      } else {
+        // Start speech
+        const utterance = new SpeechSynthesisUtterance(currentExcuse.content);
+        utterance.rate = 0.8;
+        utterance.pitch = 1;
+        utterance.volume = 0.8;
+        
+        utterance.onstart = () => setIsPlaying(true);
+        utterance.onend = () => setIsPlaying(false);
+        utterance.onerror = () => setIsPlaying(false);
+        
+        window.speechSynthesis.speak(utterance);
+      }
+    } else {
+      alert('Text-to-speech is not supported in your browser.');
+    }
+  };
+
+  const generateShareLink = () => {
+    if (!currentExcuse) return '';
+    
+    const shareData = {
+      title: currentExcuse.title,
+      content: currentExcuse.content,
+      score: currentExcuse.believabilityScore
+    };
+    
+    // Create a shareable URL (in a real app, this would be a proper backend endpoint)
+    const encodedData = btoa(JSON.stringify(shareData));
+    return `${window.location.origin}/shared-excuse/${encodedData}`;
+  };
+
+  const handleShare = (platform: string) => {
+    if (!currentExcuse) return;
+    
+    const shareText = `Check out this excuse: "${currentExcuse.content}" - Believability Score: ${currentExcuse.believabilityScore}%`;
+    const shareUrl = generateShareLink();
+    
+    const shareUrls = {
+      whatsapp: `https://wa.me/?text=${encodeURIComponent(shareText + '\n\n' + shareUrl)}`,
+      instagram: `https://www.instagram.com/`, // Instagram doesn't support direct text sharing
+      twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`,
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
+      copy: shareUrl
+    };
+    
+    if (platform === 'copy') {
+      navigator.clipboard.writeText(shareUrl);
+      alert('Share link copied to clipboard!');
+    } else if (platform === 'instagram') {
+      // For Instagram, copy text and open Instagram
+      navigator.clipboard.writeText(shareText);
+      window.open('https://www.instagram.com/', '_blank');
+      alert('Text copied! Paste it in your Instagram post.');
+    } else {
+      window.open(shareUrls[platform as keyof typeof shareUrls], '_blank');
+    }
+    
+    setShowShareModal(false);
   };
 
   const categories: { value: ExcuseCategory; label: string; icon: string }[] = [
@@ -206,25 +298,46 @@ export default function ExcuseGenerator() {
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={handleCopy}
-                  className="flex items-center justify-center space-x-2 p-3 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors"
+                  className={`flex items-center justify-center space-x-2 p-3 rounded-lg transition-all duration-200 ${
+                    copySuccess 
+                      ? 'bg-emerald-600 text-white' 
+                      : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                  }`}
                 >
-                  <Copy className="w-4 h-4" />
-                  <span>Copy</span>
+                  {copySuccess ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  <span>{copySuccess ? 'Copied!' : 'Copy'}</span>
                 </button>
+                
                 <button
                   onClick={handleSave}
-                  className="flex items-center justify-center space-x-2 p-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
+                  className={`flex items-center justify-center space-x-2 p-3 rounded-lg transition-all duration-200 ${
+                    saveSuccess 
+                      ? 'bg-emerald-600 text-white' 
+                      : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                  }`}
                 >
-                  <Save className="w-4 h-4" />
-                  <span>Save</span>
+                  {saveSuccess ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+                  <span>{saveSuccess ? 'Saved!' : 'Save'}</span>
                 </button>
-                <button className="flex items-center justify-center space-x-2 p-3 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors">
+                
+                <button 
+                  onClick={() => setShowShareModal(true)}
+                  className="flex items-center justify-center space-x-2 p-3 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors"
+                >
                   <Share2 className="w-4 h-4" />
                   <span>Share</span>
                 </button>
-                <button className="flex items-center justify-center space-x-2 p-3 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors">
+                
+                <button 
+                  onClick={handleVoice}
+                  className={`flex items-center justify-center space-x-2 p-3 rounded-lg transition-colors ${
+                    isPlaying 
+                      ? 'bg-red-600 hover:bg-red-700 text-white' 
+                      : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                  }`}
+                >
                   <Volume2 className="w-4 h-4" />
-                  <span>Voice</span>
+                  <span>{isPlaying ? 'Stop' : 'Voice'}</span>
                 </button>
               </div>
             </div>
@@ -237,6 +350,80 @@ export default function ExcuseGenerator() {
           )}
         </div>
       </div>
+
+      {/* Share Modal */}
+      {showShareModal && currentExcuse && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-800 rounded-xl max-w-md w-full border border-slate-700">
+            <div className="flex items-center justify-between p-6 border-b border-slate-700">
+              <h3 className="text-lg font-semibold text-white">Share Excuse</h3>
+              <button
+                onClick={() => setShowShareModal(false)}
+                className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-slate-400" />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <div className="mb-4 p-3 bg-slate-700/50 rounded-lg">
+                <p className="text-slate-300 text-sm">{currentExcuse.content}</p>
+                <p className="text-slate-400 text-xs mt-2">Believability: {currentExcuse.believabilityScore}%</p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => handleShare('whatsapp')}
+                  className="flex items-center justify-center space-x-2 p-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                >
+                  <span>📱</span>
+                  <span>WhatsApp</span>
+                </button>
+                
+                <button
+                  onClick={() => handleShare('instagram')}
+                  className="flex items-center justify-center space-x-2 p-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-colors"
+                >
+                  <span>📷</span>
+                  <span>Instagram</span>
+                </button>
+                
+                <button
+                  onClick={() => handleShare('twitter')}
+                  className="flex items-center justify-center space-x-2 p-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+                >
+                  <span>🐦</span>
+                  <span>Twitter</span>
+                </button>
+                
+                <button
+                  onClick={() => handleShare('facebook')}
+                  className="flex items-center justify-center space-x-2 p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                >
+                  <span>📘</span>
+                  <span>Facebook</span>
+                </button>
+                
+                <button
+                  onClick={() => handleShare('linkedin')}
+                  className="flex items-center justify-center space-x-2 p-3 bg-blue-700 hover:bg-blue-800 text-white rounded-lg transition-colors"
+                >
+                  <span>💼</span>
+                  <span>LinkedIn</span>
+                </button>
+                
+                <button
+                  onClick={() => handleShare('copy')}
+                  className="flex items-center justify-center space-x-2 p-3 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  <span>Copy Link</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
