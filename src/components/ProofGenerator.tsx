@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { generateProof } from '../utils/proofGenerator';
 import { ExcuseCategory } from '../types';
-import { Shield, Download, Eye, RefreshCw, FileText, Camera, Mail } from 'lucide-react';
+import { Shield, Download, Eye, RefreshCw, FileText, Camera, Mail, X } from 'lucide-react';
 
 export default function ProofGenerator() {
   const { state } = useApp();
@@ -10,6 +10,7 @@ export default function ProofGenerator() {
   const [customContent, setCustomContent] = useState('');
   const [generatedProof, setGeneratedProof] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const handleGenerateProof = async () => {
     setIsGenerating(true);
@@ -20,6 +21,65 @@ export default function ProofGenerator() {
     const proof = generateProof(selectedCategory, customContent);
     setGeneratedProof(proof);
     setIsGenerating(false);
+  };
+
+  const handlePreview = () => {
+    setShowPreview(true);
+  };
+
+  const handleDownload = () => {
+    if (!generatedProof) return;
+    
+    // Create a blob with the proof content
+    const content = generateDownloadContent(generatedProof);
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    
+    // Create download link
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = generatedProof.filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const generateDownloadContent = (proof: any) => {
+    switch (proof.type) {
+      case 'email':
+        return `From: ${proof.sender || 'noreply@example.com'}
+To: me@example.com
+Subject: ${proof.subject || 'Important Notice'}
+Date: ${new Date().toLocaleString()}
+
+${proof.fullContent || proof.content}
+
+---
+This is a simulated email for demonstration purposes only.`;
+      
+      case 'document':
+        return `${proof.documentTitle || 'Official Document'}
+
+${proof.fullContent || proof.content}
+
+Document ID: ${proof.documentId || 'DOC-' + Date.now()}
+Generated: ${new Date().toLocaleString()}
+Authority: ${proof.authority || 'Official Authority'}
+
+---
+This is a simulated document for demonstration purposes only.`;
+      
+      default:
+        return `${proof.content}
+
+Description: ${proof.description}
+Type: ${proof.type}
+Generated: ${new Date().toLocaleString()}
+
+---
+This is simulated content for demonstration purposes only.`;
+    }
   };
 
   const getProofIcon = (type: string) => {
@@ -42,6 +102,77 @@ export default function ProofGenerator() {
     { value: 'emergency', label: 'Emergency', icon: '🚨' },
     { value: 'personal', label: 'Personal', icon: '👤' }
   ];
+
+  const renderProofPreview = () => {
+    if (!generatedProof) return null;
+
+    const IconComponent = getProofIcon(generatedProof.type);
+
+    return (
+      <div className="p-4 bg-slate-700/30 rounded-lg border border-slate-600">
+        <h4 className="font-medium text-white mb-3">Content Preview</h4>
+        <div className="bg-white p-6 rounded-lg border-2 border-dashed border-slate-300 min-h-[200px]">
+          {generatedProof.type === 'email' ? (
+            <div className="font-mono text-sm text-gray-800">
+              <div className="border-b border-gray-300 pb-3 mb-3">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Mail className="w-4 h-4 text-blue-600" />
+                  <span className="font-semibold">Email</span>
+                </div>
+                <div className="text-xs space-y-1">
+                  <div><strong>From:</strong> {generatedProof.sender || 'noreply@example.com'}</div>
+                  <div><strong>To:</strong> me@example.com</div>
+                  <div><strong>Subject:</strong> {generatedProof.subject || 'Important Notice'}</div>
+                  <div><strong>Date:</strong> {new Date().toLocaleString()}</div>
+                </div>
+              </div>
+              <div className="whitespace-pre-wrap text-gray-700">
+                {generatedProof.fullContent || generatedProof.content}
+              </div>
+            </div>
+          ) : generatedProof.type === 'document' ? (
+            <div className="text-gray-800">
+              <div className="text-center border-b border-gray-300 pb-4 mb-4">
+                <FileText className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                <h3 className="font-bold text-lg">{generatedProof.documentTitle || 'Official Document'}</h3>
+                <p className="text-sm text-gray-600">Document ID: {generatedProof.documentId || 'DOC-' + Date.now()}</p>
+              </div>
+              <div className="space-y-3">
+                <p className="text-sm leading-relaxed">{generatedProof.fullContent || generatedProof.content}</p>
+                <div className="mt-6 pt-4 border-t border-gray-300 text-xs text-gray-600">
+                  <div className="flex justify-between">
+                    <span>Authority: {generatedProof.authority || 'Official Authority'}</span>
+                    <span>Date: {new Date().toLocaleDateString()}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : generatedProof.type === 'photo' ? (
+            <div className="text-center">
+              <Camera className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="font-semibold text-gray-800 mb-2">{generatedProof.content}</h3>
+              <p className="text-sm text-gray-600 mb-4">{generatedProof.description}</p>
+              <div className="bg-gray-100 p-4 rounded border-2 border-dashed border-gray-300">
+                <div className="text-gray-500 text-sm">
+                  📸 Photo Evidence<br/>
+                  {generatedProof.photoDetails || 'High-resolution image showing the described situation'}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center">
+              <IconComponent className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="font-semibold text-gray-800 mb-2">{generatedProof.content}</h3>
+              <p className="text-sm text-gray-600">{generatedProof.description}</p>
+              <div className="mt-4 p-3 bg-gray-100 rounded text-xs text-gray-600">
+                {generatedProof.previewContent || 'Sample content would be displayed here'}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="p-8">
@@ -146,18 +277,7 @@ export default function ProofGenerator() {
               </div>
 
               {/* Proof Preview */}
-              <div className="p-4 bg-slate-700/30 rounded-lg border border-slate-600">
-                <h4 className="font-medium text-white mb-3">Content Preview</h4>
-                <div className="bg-slate-800 p-4 rounded-lg border-2 border-dashed border-slate-600">
-                  <div className="text-center py-8">
-                    {React.createElement(getProofIcon(generatedProof.type), {
-                      className: "w-12 h-12 text-slate-500 mx-auto mb-3"
-                    })}
-                    <p className="text-slate-300 font-medium">{generatedProof.content}</p>
-                    <p className="text-slate-400 text-sm mt-2">{generatedProof.description}</p>
-                  </div>
-                </div>
-              </div>
+              {renderProofPreview()}
 
               {/* Proof Details */}
               <div className="space-y-3">
@@ -181,11 +301,17 @@ export default function ProofGenerator() {
 
               {/* Action Buttons */}
               <div className="grid grid-cols-2 gap-3">
-                <button className="flex items-center justify-center space-x-2 p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                <button 
+                  onClick={handlePreview}
+                  className="flex items-center justify-center space-x-2 p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                >
                   <Eye className="w-4 h-4" />
                   <span>Preview</span>
                 </button>
-                <button className="flex items-center justify-center space-x-2 p-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors">
+                <button 
+                  onClick={handleDownload}
+                  className="flex items-center justify-center space-x-2 p-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
+                >
                   <Download className="w-4 h-4" />
                   <span>Download</span>
                 </button>
@@ -207,6 +333,70 @@ export default function ProofGenerator() {
           )}
         </div>
       </div>
+
+      {/* Preview Modal */}
+      {showPreview && generatedProof && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {generatedProof.type.charAt(0).toUpperCase() + generatedProof.type.slice(1)} Preview
+              </h3>
+              <button
+                onClick={() => setShowPreview(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            <div className="p-6">
+              {generatedProof.type === 'email' ? (
+                <div className="font-mono text-sm">
+                  <div className="bg-gray-50 p-4 rounded-lg border mb-4">
+                    <div className="space-y-2 text-xs">
+                      <div><strong>From:</strong> {generatedProof.sender || 'noreply@example.com'}</div>
+                      <div><strong>To:</strong> me@example.com</div>
+                      <div><strong>Subject:</strong> {generatedProof.subject || 'Important Notice'}</div>
+                      <div><strong>Date:</strong> {new Date().toLocaleString()}</div>
+                    </div>
+                  </div>
+                  <div className="whitespace-pre-wrap bg-white p-4 border rounded-lg">
+                    {generatedProof.fullContent || generatedProof.content}
+                  </div>
+                </div>
+              ) : generatedProof.type === 'document' ? (
+                <div className="max-w-2xl mx-auto">
+                  <div className="text-center border-b border-gray-300 pb-6 mb-6">
+                    <FileText className="w-12 h-12 text-blue-600 mx-auto mb-3" />
+                    <h2 className="text-2xl font-bold text-gray-900">{generatedProof.documentTitle || 'Official Document'}</h2>
+                    <p className="text-gray-600 mt-2">Document ID: {generatedProof.documentId || 'DOC-' + Date.now()}</p>
+                  </div>
+                  <div className="space-y-4">
+                    <p className="leading-relaxed text-gray-800">{generatedProof.fullContent || generatedProof.content}</p>
+                    <div className="mt-8 pt-6 border-t border-gray-300 text-sm text-gray-600">
+                      <div className="flex justify-between">
+                        <span>Authority: {generatedProof.authority || 'Official Authority'}</span>
+                        <span>Date: {new Date().toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center">
+                  {React.createElement(getProofIcon(generatedProof.type), {
+                    className: "w-20 h-20 text-gray-400 mx-auto mb-6"
+                  })}
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">{generatedProof.content}</h3>
+                  <p className="text-gray-600 mb-6">{generatedProof.description}</p>
+                  <div className="bg-gray-50 p-6 rounded-lg border-2 border-dashed border-gray-300">
+                    <p className="text-gray-700">{generatedProof.previewContent || 'Detailed content would be displayed here'}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
