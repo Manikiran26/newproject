@@ -34,7 +34,11 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex h-screen">
+    <div className={`flex h-screen transition-colors duration-300 ${
+      state.preferences.theme === 'light' 
+        ? 'bg-gradient-to-br from-gray-50 via-blue-50 to-gray-50' 
+        : 'bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900'
+    }`}>
       <Navigation />
       <main className="flex-1 overflow-auto">
         {renderCurrentView()}

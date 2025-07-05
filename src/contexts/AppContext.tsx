@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
 import { Excuse, EmergencyAlert, Apology, UserPreferences } from '../types';
 
 interface AppState {
@@ -44,6 +44,11 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'ADD_EXCUSE':
       return { ...state, excuses: [action.payload, ...state.excuses] };
     case 'SAVE_EXCUSE':
+      // Check if excuse is already saved to avoid duplicates
+      const isAlreadySaved = state.savedExcuses.some(e => e.id === action.payload.id);
+      if (isAlreadySaved) {
+        return state;
+      }
       return { ...state, savedExcuses: [action.payload, ...state.savedExcuses] };
     case 'REMOVE_EXCUSE':
       return { 
@@ -55,7 +60,21 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'ADD_APOLOGY':
       return { ...state, apologies: [action.payload, ...state.apologies] };
     case 'UPDATE_PREFERENCES':
-      return { ...state, preferences: { ...state.preferences, ...action.payload } };
+      const newPreferences = { ...state.preferences, ...action.payload };
+      
+      // Apply theme immediately to document
+      if (action.payload.theme) {
+        const root = document.documentElement;
+        if (action.payload.theme === 'light') {
+          root.classList.add('light-theme');
+          root.classList.remove('dark-theme');
+        } else {
+          root.classList.add('dark-theme');
+          root.classList.remove('light-theme');
+        }
+      }
+      
+      return { ...state, preferences: newPreferences };
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload };
     case 'SET_VIEW':
@@ -80,6 +99,18 @@ const AppContext = createContext<{
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
+
+  // Apply initial theme on mount
+  useEffect(() => {
+    const root = document.documentElement;
+    if (state.preferences.theme === 'light') {
+      root.classList.add('light-theme');
+      root.classList.remove('dark-theme');
+    } else {
+      root.classList.add('dark-theme');
+      root.classList.remove('light-theme');
+    }
+  }, []);
 
   return (
     <AppContext.Provider value={{ state, dispatch }}>

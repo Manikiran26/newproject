@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { generateExcuse } from '../utils/excuseEngine';
+import { useTranslation } from '../utils/translations';
 import { ExcuseContext, ExcuseCategory } from '../types';
 import { 
   Sparkles, 
   Copy, 
-  Save, 
+  Download, 
   Share2, 
   Volume2, 
   RefreshCw,
@@ -18,6 +19,7 @@ import {
 
 export default function ExcuseGenerator() {
   const { state, dispatch } = useApp();
+  const { t } = useTranslation(state.preferences.defaultLanguage);
   const [context, setContext] = useState<ExcuseContext>({
     situation: 'work',
     urgency: 'medium',
@@ -28,7 +30,7 @@ export default function ExcuseGenerator() {
   const [currentExcuse, setCurrentExcuse] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -38,17 +40,45 @@ export default function ExcuseGenerator() {
     // Simulate AI processing time
     await new Promise(resolve => setTimeout(resolve, 1500));
     
-    const excuse = generateExcuse(context);
+    const excuse = generateExcuse(context, state.preferences.defaultLanguage);
     setCurrentExcuse(excuse);
     dispatch({ type: 'ADD_EXCUSE', payload: excuse });
     setIsGenerating(false);
   };
 
-  const handleSave = () => {
+  const handleDownload = () => {
     if (currentExcuse) {
-      dispatch({ type: 'SAVE_EXCUSE', payload: currentExcuse });
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 2000);
+      const content = `${t('excuseDocument')}
+      
+${t('believabilityScore')}: ${currentExcuse.believabilityScore}%
+${t('category')}: ${t(currentExcuse.category)}
+${t('urgency')}: ${t(currentExcuse.context.urgency)}
+${t('audience')}: ${t(currentExcuse.context.audience)}
+${t('generated')}: ${new Date().toLocaleString()}
+
+---
+
+${currentExcuse.title}
+
+${currentExcuse.content}
+
+---
+${t('generatedBy')} ExcuseAI
+${t('forPersonalUse')}`;
+
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `excuse_${currentExcuse.category}_${Date.now()}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      setDownloadSuccess(true);
+      setTimeout(() => setDownloadSuccess(false), 2000);
     }
   };
 
@@ -86,6 +116,27 @@ export default function ExcuseGenerator() {
         utterance.pitch = 1;
         utterance.volume = 0.8;
         
+        // Set language based on user preference
+        const langMap: { [key: string]: string } = {
+          'en': 'en-US',
+          'es': 'es-ES',
+          'fr': 'fr-FR',
+          'hi': 'hi-IN',
+          'ml': 'ml-IN',
+          'te': 'te-IN',
+          'ta': 'ta-IN',
+          'de': 'de-DE',
+          'it': 'it-IT',
+          'pt': 'pt-PT',
+          'ru': 'ru-RU',
+          'ja': 'ja-JP',
+          'ko': 'ko-KR',
+          'zh': 'zh-CN',
+          'ar': 'ar-SA'
+        };
+        
+        utterance.lang = langMap[state.preferences.defaultLanguage] || 'en-US';
+        
         utterance.onstart = () => setIsPlaying(true);
         utterance.onend = () => setIsPlaying(false);
         utterance.onerror = () => setIsPlaying(false);
@@ -93,7 +144,7 @@ export default function ExcuseGenerator() {
         window.speechSynthesis.speak(utterance);
       }
     } else {
-      alert('Text-to-speech is not supported in your browser.');
+      alert(t('voiceNotSupported'));
     }
   };
 
@@ -114,7 +165,7 @@ export default function ExcuseGenerator() {
   const handleShare = (platform: string) => {
     if (!currentExcuse) return;
     
-    const shareText = `Check out this excuse: "${currentExcuse.content}" - Believability Score: ${currentExcuse.believabilityScore}%`;
+    const shareText = `${t('checkOutExcuse')}: "${currentExcuse.content}" - ${t('believabilityScore')}: ${currentExcuse.believabilityScore}%`;
     const shareUrl = generateShareLink();
     
     const shareUrls = {
@@ -128,12 +179,12 @@ export default function ExcuseGenerator() {
     
     if (platform === 'copy') {
       navigator.clipboard.writeText(shareUrl);
-      alert('Share link copied to clipboard!');
+      alert(t('shareLinkCopied'));
     } else if (platform === 'instagram') {
       // For Instagram, copy text and open Instagram
       navigator.clipboard.writeText(shareText);
       window.open('https://www.instagram.com/', '_blank');
-      alert('Text copied! Paste it in your Instagram post.');
+      alert(t('textCopiedInstagram'));
     } else {
       window.open(shareUrls[platform as keyof typeof shareUrls], '_blank');
     }
@@ -142,32 +193,78 @@ export default function ExcuseGenerator() {
   };
 
   const categories: { value: ExcuseCategory; label: string; icon: string }[] = [
-    { value: 'work', label: 'Work', icon: '💼' },
-    { value: 'medical', label: 'Medical', icon: '🏥' },
-    { value: 'family', label: 'Family', icon: '👨‍👩‍👧‍👦' },
-    { value: 'transport', label: 'Transport', icon: '🚗' },
-    { value: 'technology', label: 'Technology', icon: '💻' },
-    { value: 'weather', label: 'Weather', icon: '🌧️' },
-    { value: 'emergency', label: 'Emergency', icon: '🚨' },
-    { value: 'personal', label: 'Personal', icon: '👤' }
+    { value: 'work', label: t('work'), icon: '💼' },
+    { value: 'medical', label: t('medical'), icon: '🏥' },
+    { value: 'family', label: t('family'), icon: '👨‍👩‍👧‍👦' },
+    { value: 'transport', label: t('transport'), icon: '🚗' },
+    { value: 'technology', label: t('technology'), icon: '💻' },
+    { value: 'weather', label: t('weather'), icon: '🌧️' },
+    { value: 'emergency', label: t('emergency'), icon: '🚨' },
+    { value: 'personal', label: t('personal'), icon: '👤' }
+  ];
+
+  const urgencyLevels = [
+    { value: 'low', label: t('low'), color: 'emerald' },
+    { value: 'medium', label: t('medium'), color: 'yellow' },
+    { value: 'high', label: t('high'), color: 'orange' },
+    { value: 'critical', label: t('critical'), color: 'red' }
+  ];
+
+  const audienceOptions = [
+    { value: 'family', label: t('family') },
+    { value: 'work', label: t('workProfessional') },
+    { value: 'friends', label: t('friends') },
+    { value: 'romantic', label: t('romanticPartner') },
+    { value: 'authority', label: t('authorityFigure') }
+  ];
+
+  const relationshipOptions = [
+    { value: 'close', label: t('close') },
+    { value: 'professional', label: t('professional') },
+    { value: 'casual', label: t('casual') },
+    { value: 'distant', label: t('distant') }
   ];
 
   return (
-    <div className="p-8">
+    <div className={`p-8 min-h-screen transition-colors duration-300 ${
+      state.preferences.theme === 'light' 
+        ? 'bg-gradient-to-br from-gray-50 via-blue-50 to-gray-50' 
+        : 'bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900'
+    }`}>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Excuse Generator</h1>
-        <p className="text-slate-400">Create context-aware, believable excuses with AI assistance</p>
+        <h1 className={`text-3xl font-bold mb-2 ${
+          state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+        }`}>
+          {t('generateExcuse')}
+        </h1>
+        <p className={`${
+          state.preferences.theme === 'light' ? 'text-gray-600' : 'text-slate-400'
+        }`}>
+          {t('createContextAware')}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Configuration Panel */}
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700 p-6">
-          <h2 className="text-xl font-semibold text-white mb-6">Configure Context</h2>
+        <div className={`backdrop-blur-sm rounded-xl border p-6 ${
+          state.preferences.theme === 'light' 
+            ? 'bg-white/70 border-gray-200' 
+            : 'bg-slate-800/50 border-slate-700'
+        }`}>
+          <h2 className={`text-xl font-semibold mb-6 ${
+            state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+          }`}>
+            {t('configureContext')}
+          </h2>
           
           <div className="space-y-6">
             {/* Situation */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-3">Situation</label>
+              <label className={`block text-sm font-medium mb-3 ${
+                state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
+              }`}>
+                {t('situation')}
+              </label>
               <div className="grid grid-cols-2 gap-2">
                 {categories.map((cat) => (
                   <button
@@ -175,8 +272,12 @@ export default function ExcuseGenerator() {
                     onClick={() => setContext({ ...context, situation: cat.value })}
                     className={`flex items-center space-x-2 p-3 rounded-lg border transition-all duration-200 ${
                       context.situation === cat.value
-                        ? 'bg-blue-600/20 border-blue-500 text-blue-300'
-                        : 'bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700'
+                        ? state.preferences.theme === 'light'
+                          ? 'bg-blue-100 border-blue-300 text-blue-700'
+                          : 'bg-blue-600/20 border-blue-500 text-blue-300'
+                        : state.preferences.theme === 'light'
+                          ? 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+                          : 'bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700'
                     }`}
                   >
                     <span>{cat.icon}</span>
@@ -188,21 +289,22 @@ export default function ExcuseGenerator() {
 
             {/* Urgency */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-3">Urgency Level</label>
+              <label className={`block text-sm font-medium mb-3 ${
+                state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
+              }`}>
+                {t('urgency')}
+              </label>
               <div className="grid grid-cols-2 gap-2">
-                {[
-                  { value: 'low', label: 'Low', color: 'emerald' },
-                  { value: 'medium', label: 'Medium', color: 'yellow' },
-                  { value: 'high', label: 'High', color: 'orange' },
-                  { value: 'critical', label: 'Critical', color: 'red' }
-                ].map((urgency) => (
+                {urgencyLevels.map((urgency) => (
                   <button
                     key={urgency.value}
                     onClick={() => setContext({ ...context, urgency: urgency.value as any })}
                     className={`p-3 rounded-lg border transition-all duration-200 ${
                       context.urgency === urgency.value
                         ? `bg-${urgency.color}-600/20 border-${urgency.color}-500 text-${urgency.color}-300`
-                        : 'bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700'
+                        : state.preferences.theme === 'light'
+                          ? 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+                          : 'bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700'
                     }`}
                   >
                     <span className="text-sm font-medium">{urgency.label}</span>
@@ -213,32 +315,49 @@ export default function ExcuseGenerator() {
 
             {/* Audience */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-3">Audience</label>
+              <label className={`block text-sm font-medium mb-3 ${
+                state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
+              }`}>
+                {t('audience')}
+              </label>
               <select
                 value={context.audience}
                 onChange={(e) => setContext({ ...context, audience: e.target.value as any })}
-                className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                className={`w-full p-3 rounded-lg border focus:ring-1 transition-colors ${
+                  state.preferences.theme === 'light'
+                    ? 'bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500'
+                    : 'bg-slate-700 border-slate-600 text-white focus:border-blue-500 focus:ring-blue-500'
+                }`}
               >
-                <option value="family">Family</option>
-                <option value="work">Work/Professional</option>
-                <option value="friends">Friends</option>
-                <option value="romantic">Romantic Partner</option>
-                <option value="authority">Authority Figure</option>
+                {audienceOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </div>
 
             {/* Relationship */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-3">Relationship</label>
+              <label className={`block text-sm font-medium mb-3 ${
+                state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
+              }`}>
+                {t('relationship')}
+              </label>
               <select
                 value={context.relationship}
                 onChange={(e) => setContext({ ...context, relationship: e.target.value as any })}
-                className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                className={`w-full p-3 rounded-lg border focus:ring-1 transition-colors ${
+                  state.preferences.theme === 'light'
+                    ? 'bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500'
+                    : 'bg-slate-700 border-slate-600 text-white focus:border-blue-500 focus:ring-blue-500'
+                }`}
               >
-                <option value="close">Close</option>
-                <option value="professional">Professional</option>
-                <option value="casual">Casual</option>
-                <option value="distant">Distant</option>
+                {relationshipOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -253,41 +372,77 @@ export default function ExcuseGenerator() {
               ) : (
                 <Sparkles className="w-5 h-5" />
               )}
-              <span>{isGenerating ? 'Generating...' : 'Generate Excuse'}</span>
+              <span>{isGenerating ? t('generating') : t('generateExcuse')}</span>
             </button>
           </div>
         </div>
 
         {/* Result Panel */}
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700 p-6">
-          <h2 className="text-xl font-semibold text-white mb-6">Generated Excuse</h2>
+        <div className={`backdrop-blur-sm rounded-xl border p-6 ${
+          state.preferences.theme === 'light' 
+            ? 'bg-white/70 border-gray-200' 
+            : 'bg-slate-800/50 border-slate-700'
+        }`}>
+          <h2 className={`text-xl font-semibold mb-6 ${
+            state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+          }`}>
+            {t('generatedExcuse')}
+          </h2>
           
           {currentExcuse ? (
             <div className="space-y-6">
               {/* Believability Score */}
-              <div className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg">
+              <div className={`flex items-center justify-between p-4 rounded-lg ${
+                state.preferences.theme === 'light' ? 'bg-gray-100' : 'bg-slate-700/50'
+              }`}>
                 <div className="flex items-center space-x-2">
-                  <TrendingUp className="w-5 h-5 text-emerald-400" />
-                  <span className="font-medium text-white">Believability Score</span>
+                  <TrendingUp className={`w-5 h-5 ${
+                    state.preferences.theme === 'light' ? 'text-emerald-600' : 'text-emerald-400'
+                  }`} />
+                  <span className={`font-medium ${
+                    state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+                  }`}>
+                    {t('believabilityScore')}
+                  </span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className={`w-3 h-3 rounded-full ${
                     currentExcuse.believabilityScore >= 80 ? 'bg-emerald-400' :
                     currentExcuse.believabilityScore >= 60 ? 'bg-yellow-400' : 'bg-red-400'
                   }`}></div>
-                  <span className="text-xl font-bold text-white">{currentExcuse.believabilityScore}%</span>
+                  <span className={`text-xl font-bold ${
+                    state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+                  }`}>
+                    {currentExcuse.believabilityScore}%
+                  </span>
                 </div>
               </div>
 
               {/* Excuse Content */}
-              <div className="p-4 bg-slate-700/30 rounded-lg border border-slate-600">
-                <h3 className="font-semibold text-white mb-2">{currentExcuse.title}</h3>
-                <p className="text-slate-300 leading-relaxed">{currentExcuse.content}</p>
-                <div className="flex items-center space-x-4 mt-4 pt-4 border-t border-slate-600">
+              <div className={`p-4 rounded-lg border ${
+                state.preferences.theme === 'light' 
+                  ? 'bg-gray-50 border-gray-200' 
+                  : 'bg-slate-700/30 border-slate-600'
+              }`}>
+                <h3 className={`font-semibold mb-2 ${
+                  state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+                }`}>
+                  {currentExcuse.title}
+                </h3>
+                <p className={`leading-relaxed ${
+                  state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
+                }`}>
+                  {currentExcuse.content}
+                </p>
+                <div className={`flex items-center space-x-4 mt-4 pt-4 border-t ${
+                  state.preferences.theme === 'light' ? 'border-gray-200' : 'border-slate-600'
+                }`}>
                   <span className="px-3 py-1 bg-blue-600/20 text-blue-300 text-sm rounded-full">
-                    {currentExcuse.category}
+                    {t(currentExcuse.category)}
                   </span>
-                  <div className="flex items-center space-x-1 text-slate-400 text-sm">
+                  <div className={`flex items-center space-x-1 text-sm ${
+                    state.preferences.theme === 'light' ? 'text-gray-500' : 'text-slate-400'
+                  }`}>
                     <Clock className="w-4 h-4" />
                     <span>{new Date(currentExcuse.timestamp).toLocaleString()}</span>
                   </div>
@@ -301,31 +456,37 @@ export default function ExcuseGenerator() {
                   className={`flex items-center justify-center space-x-2 p-3 rounded-lg transition-all duration-200 ${
                     copySuccess 
                       ? 'bg-emerald-600 text-white' 
-                      : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                      : state.preferences.theme === 'light'
+                        ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                        : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
                   }`}
                 >
                   {copySuccess ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  <span>{copySuccess ? 'Copied!' : 'Copy'}</span>
+                  <span>{copySuccess ? t('copied') : t('copy')}</span>
                 </button>
                 
                 <button
-                  onClick={handleSave}
+                  onClick={handleDownload}
                   className={`flex items-center justify-center space-x-2 p-3 rounded-lg transition-all duration-200 ${
-                    saveSuccess 
+                    downloadSuccess 
                       ? 'bg-emerald-600 text-white' 
                       : 'bg-emerald-600 hover:bg-emerald-700 text-white'
                   }`}
                 >
-                  {saveSuccess ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
-                  <span>{saveSuccess ? 'Saved!' : 'Save'}</span>
+                  {downloadSuccess ? <Check className="w-4 h-4" /> : <Download className="w-4 h-4" />}
+                  <span>{downloadSuccess ? t('downloaded') : t('download')}</span>
                 </button>
                 
                 <button 
                   onClick={() => setShowShareModal(true)}
-                  className="flex items-center justify-center space-x-2 p-3 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors"
+                  className={`flex items-center justify-center space-x-2 p-3 rounded-lg transition-colors ${
+                    state.preferences.theme === 'light'
+                      ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                      : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                  }`}
                 >
                   <Share2 className="w-4 h-4" />
-                  <span>Share</span>
+                  <span>{t('share')}</span>
                 </button>
                 
                 <button 
@@ -333,19 +494,31 @@ export default function ExcuseGenerator() {
                   className={`flex items-center justify-center space-x-2 p-3 rounded-lg transition-colors ${
                     isPlaying 
                       ? 'bg-red-600 hover:bg-red-700 text-white' 
-                      : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                      : state.preferences.theme === 'light'
+                        ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                        : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
                   }`}
                 >
                   <Volume2 className="w-4 h-4" />
-                  <span>{isPlaying ? 'Stop' : 'Voice'}</span>
+                  <span>{isPlaying ? t('stop') : t('voice')}</span>
                 </button>
               </div>
             </div>
           ) : (
             <div className="text-center py-12">
-              <Sparkles className="w-16 h-16 text-slate-500 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-slate-300 mb-2">Ready to Generate</h3>
-              <p className="text-slate-400">Configure your context and click generate to create your excuse</p>
+              <Sparkles className={`w-16 h-16 mx-auto mb-4 ${
+                state.preferences.theme === 'light' ? 'text-gray-400' : 'text-slate-500'
+              }`} />
+              <h3 className={`text-lg font-medium mb-2 ${
+                state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
+              }`}>
+                {t('readyToGenerate')}
+              </h3>
+              <p className={`${
+                state.preferences.theme === 'light' ? 'text-gray-500' : 'text-slate-400'
+              }`}>
+                {t('configureContextAndGenerate')}
+              </p>
             </div>
           )}
         </div>
@@ -354,21 +527,47 @@ export default function ExcuseGenerator() {
       {/* Share Modal */}
       {showShareModal && currentExcuse && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800 rounded-xl max-w-md w-full border border-slate-700">
-            <div className="flex items-center justify-between p-6 border-b border-slate-700">
-              <h3 className="text-lg font-semibold text-white">Share Excuse</h3>
+          <div className={`rounded-xl max-w-md w-full border ${
+            state.preferences.theme === 'light' 
+              ? 'bg-white border-gray-200' 
+              : 'bg-slate-800 border-slate-700'
+          }`}>
+            <div className={`flex items-center justify-between p-6 border-b ${
+              state.preferences.theme === 'light' ? 'border-gray-200' : 'border-slate-700'
+            }`}>
+              <h3 className={`text-lg font-semibold ${
+                state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+              }`}>
+                {t('shareExcuse')}
+              </h3>
               <button
                 onClick={() => setShowShareModal(false)}
-                className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
+                className={`p-2 rounded-lg transition-colors ${
+                  state.preferences.theme === 'light' 
+                    ? 'hover:bg-gray-100' 
+                    : 'hover:bg-slate-700'
+                }`}
               >
-                <X className="w-5 h-5 text-slate-400" />
+                <X className={`w-5 h-5 ${
+                  state.preferences.theme === 'light' ? 'text-gray-500' : 'text-slate-400'
+                }`} />
               </button>
             </div>
             
             <div className="p-6">
-              <div className="mb-4 p-3 bg-slate-700/50 rounded-lg">
-                <p className="text-slate-300 text-sm">{currentExcuse.content}</p>
-                <p className="text-slate-400 text-xs mt-2">Believability: {currentExcuse.believabilityScore}%</p>
+              <div className={`mb-4 p-3 rounded-lg ${
+                state.preferences.theme === 'light' ? 'bg-gray-100' : 'bg-slate-700/50'
+              }`}>
+                <p className={`text-sm ${
+                  state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
+                }`}>
+                  {currentExcuse.content}
+                </p>
+                <p className={`text-xs mt-2 ${
+                  state.preferences.theme === 'light' ? 'text-gray-500' : 'text-slate-400'
+                }`}>
+                  {t('believability')}: {currentExcuse.believabilityScore}%
+                </p>
               </div>
               
               <div className="grid grid-cols-2 gap-3">
@@ -414,10 +613,14 @@ export default function ExcuseGenerator() {
                 
                 <button
                   onClick={() => handleShare('copy')}
-                  className="flex items-center justify-center space-x-2 p-3 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors"
+                  className={`flex items-center justify-center space-x-2 p-3 rounded-lg transition-colors ${
+                    state.preferences.theme === 'light'
+                      ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                      : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                  }`}
                 >
                   <ExternalLink className="w-4 h-4" />
-                  <span>Copy Link</span>
+                  <span>{t('copyLink')}</span>
                 </button>
               </div>
             </div>
