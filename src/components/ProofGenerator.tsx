@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useApp } from '../contexts/AppContext';
 import { generateProof } from '../utils/proofGenerator';
+import { useTranslation } from '../utils/translations';
 import { ExcuseCategory } from '../types';
 import { Shield, Download, Eye, RefreshCw, FileText, Camera, Mail, X } from 'lucide-react';
 
 export default function ProofGenerator() {
   const { state } = useApp();
+  const { t } = useTranslation(state.preferences.defaultLanguage);
   const [selectedCategory, setSelectedCategory] = useState<ExcuseCategory>('work');
   const [customContent, setCustomContent] = useState('');
   const [generatedProof, setGeneratedProof] = useState<any>(null);
@@ -18,7 +20,7 @@ export default function ProofGenerator() {
     // Simulate proof generation time
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    const proof = generateProof(selectedCategory, customContent);
+    const proof = generateProof(selectedCategory, customContent, state.preferences.defaultLanguage);
     setGeneratedProof(proof);
     setIsGenerating(false);
   };
@@ -48,37 +50,37 @@ export default function ProofGenerator() {
   const generateDownloadContent = (proof: any) => {
     switch (proof.type) {
       case 'email':
-        return `From: ${proof.sender || 'noreply@example.com'}
-To: me@example.com
-Subject: ${proof.subject || 'Important Notice'}
-Date: ${new Date().toLocaleString()}
+        return `${t('from')}: ${proof.sender || 'noreply@example.com'}
+${t('to')}: me@example.com
+${t('subject')}: ${proof.subject || t('importantNotice')}
+${t('date')}: ${new Date().toLocaleString()}
 
 ${proof.fullContent || proof.content}
 
 ---
-This is a simulated email for demonstration purposes only.`;
+${t('simulatedEmailDisclaimer')}`;
       
       case 'document':
-        return `${proof.documentTitle || 'Official Document'}
+        return `${proof.documentTitle || t('officialDocument')}
 
 ${proof.fullContent || proof.content}
 
-Document ID: ${proof.documentId || 'DOC-' + Date.now()}
-Generated: ${new Date().toLocaleString()}
-Authority: ${proof.authority || 'Official Authority'}
+${t('documentId')}: ${proof.documentId || 'DOC-' + Date.now()}
+${t('generated')}: ${new Date().toLocaleString()}
+${t('authority')}: ${proof.authority || t('officialAuthority')}
 
 ---
-This is a simulated document for demonstration purposes only.`;
+${t('simulatedDocumentDisclaimer')}`;
       
       default:
         return `${proof.content}
 
-Description: ${proof.description}
-Type: ${proof.type}
-Generated: ${new Date().toLocaleString()}
+${t('description')}: ${proof.description}
+${t('type')}: ${proof.type}
+${t('generated')}: ${new Date().toLocaleString()}
 
 ---
-This is simulated content for demonstration purposes only.`;
+${t('simulatedContentDisclaimer')}`;
     }
   };
 
@@ -93,14 +95,14 @@ This is simulated content for demonstration purposes only.`;
   };
 
   const categories = [
-    { value: 'medical', label: 'Medical', icon: '🏥' },
-    { value: 'work', label: 'Work', icon: '💼' },
-    { value: 'transport', label: 'Transport', icon: '🚗' },
-    { value: 'family', label: 'Family', icon: '👨‍👩‍👧‍👦' },
-    { value: 'technology', label: 'Technology', icon: '💻' },
-    { value: 'weather', label: 'Weather', icon: '🌧️' },
-    { value: 'emergency', label: 'Emergency', icon: '🚨' },
-    { value: 'personal', label: 'Personal', icon: '👤' }
+    { value: 'medical', label: t('medical'), icon: '🏥' },
+    { value: 'work', label: t('work'), icon: '💼' },
+    { value: 'transport', label: t('transport'), icon: '🚗' },
+    { value: 'family', label: t('family'), icon: '👨‍👩‍👧‍👦' },
+    { value: 'technology', label: t('technology'), icon: '💻' },
+    { value: 'weather', label: t('weather'), icon: '🌧️' },
+    { value: 'emergency', label: t('emergency'), icon: '🚨' },
+    { value: 'personal', label: t('personal'), icon: '👤' }
   ];
 
   const renderProofPreview = () => {
@@ -109,21 +111,29 @@ This is simulated content for demonstration purposes only.`;
     const IconComponent = getProofIcon(generatedProof.type);
 
     return (
-      <div className="p-4 bg-slate-700/30 rounded-lg border border-slate-600">
-        <h4 className="font-medium text-white mb-3">Content Preview</h4>
+      <div className={`p-4 rounded-lg border ${
+        state.preferences.theme === 'light' 
+          ? 'bg-gray-50 border-gray-200' 
+          : 'bg-slate-700/30 border-slate-600'
+      }`}>
+        <h4 className={`font-medium mb-3 ${
+          state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+        }`}>
+          {t('contentPreview')}
+        </h4>
         <div className="bg-white p-6 rounded-lg border-2 border-dashed border-slate-300 min-h-[200px]">
           {generatedProof.type === 'email' ? (
             <div className="font-mono text-sm text-gray-800">
               <div className="border-b border-gray-300 pb-3 mb-3">
                 <div className="flex items-center space-x-2 mb-2">
                   <Mail className="w-4 h-4 text-blue-600" />
-                  <span className="font-semibold">Email</span>
+                  <span className="font-semibold">{t('email')}</span>
                 </div>
                 <div className="text-xs space-y-1">
-                  <div><strong>From:</strong> {generatedProof.sender || 'noreply@example.com'}</div>
-                  <div><strong>To:</strong> me@example.com</div>
-                  <div><strong>Subject:</strong> {generatedProof.subject || 'Important Notice'}</div>
-                  <div><strong>Date:</strong> {new Date().toLocaleString()}</div>
+                  <div><strong>{t('from')}:</strong> {generatedProof.sender || 'noreply@example.com'}</div>
+                  <div><strong>{t('to')}:</strong> me@example.com</div>
+                  <div><strong>{t('subject')}:</strong> {generatedProof.subject || t('importantNotice')}</div>
+                  <div><strong>{t('date')}:</strong> {new Date().toLocaleString()}</div>
                 </div>
               </div>
               <div className="whitespace-pre-wrap text-gray-700">
@@ -134,15 +144,15 @@ This is simulated content for demonstration purposes only.`;
             <div className="text-gray-800">
               <div className="text-center border-b border-gray-300 pb-4 mb-4">
                 <FileText className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-                <h3 className="font-bold text-lg">{generatedProof.documentTitle || 'Official Document'}</h3>
-                <p className="text-sm text-gray-600">Document ID: {generatedProof.documentId || 'DOC-' + Date.now()}</p>
+                <h3 className="font-bold text-lg">{generatedProof.documentTitle || t('officialDocument')}</h3>
+                <p className="text-sm text-gray-600">{t('documentId')}: {generatedProof.documentId || 'DOC-' + Date.now()}</p>
               </div>
               <div className="space-y-3">
                 <p className="text-sm leading-relaxed">{generatedProof.fullContent || generatedProof.content}</p>
                 <div className="mt-6 pt-4 border-t border-gray-300 text-xs text-gray-600">
                   <div className="flex justify-between">
-                    <span>Authority: {generatedProof.authority || 'Official Authority'}</span>
-                    <span>Date: {new Date().toLocaleDateString()}</span>
+                    <span>{t('authority')}: {generatedProof.authority || t('officialAuthority')}</span>
+                    <span>{t('date')}: {new Date().toLocaleDateString()}</span>
                   </div>
                 </div>
               </div>
@@ -154,8 +164,8 @@ This is simulated content for demonstration purposes only.`;
               <p className="text-sm text-gray-600 mb-4">{generatedProof.description}</p>
               <div className="bg-gray-100 p-4 rounded border-2 border-dashed border-gray-300">
                 <div className="text-gray-500 text-sm">
-                  📸 Photo Evidence<br/>
-                  {generatedProof.photoDetails || 'High-resolution image showing the described situation'}
+                  📸 {t('photoEvidence')}<br/>
+                  {generatedProof.photoDetails || t('highResolutionImage')}
                 </div>
               </div>
             </div>
@@ -165,7 +175,7 @@ This is simulated content for demonstration purposes only.`;
               <h3 className="font-semibold text-gray-800 mb-2">{generatedProof.content}</h3>
               <p className="text-sm text-gray-600">{generatedProof.description}</p>
               <div className="mt-4 p-3 bg-gray-100 rounded text-xs text-gray-600">
-                {generatedProof.previewContent || 'Sample content would be displayed here'}
+                {generatedProof.previewContent || t('sampleContentHere')}
               </div>
             </div>
           )}
@@ -175,21 +185,45 @@ This is simulated content for demonstration purposes only.`;
   };
 
   return (
-    <div className="p-8">
+    <div className={`p-8 min-h-screen transition-colors duration-300 ${
+      state.preferences.theme === 'light' 
+        ? 'bg-gradient-to-br from-gray-50 via-blue-50 to-gray-50' 
+        : 'bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900'
+    }`}>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Proof Generator</h1>
-        <p className="text-slate-400">Generate realistic supporting evidence for your excuses</p>
+        <h1 className={`text-3xl font-bold mb-2 ${
+          state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+        }`}>
+          {t('proofGenerator')}
+        </h1>
+        <p className={`${
+          state.preferences.theme === 'light' ? 'text-gray-600' : 'text-slate-400'
+        }`}>
+          {t('generateRealisticEvidence')}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Configuration Panel */}
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700 p-6">
-          <h2 className="text-xl font-semibold text-white mb-6">Proof Configuration</h2>
+        <div className={`backdrop-blur-sm rounded-xl border p-6 ${
+          state.preferences.theme === 'light' 
+            ? 'bg-white/70 border-gray-200' 
+            : 'bg-slate-800/50 border-slate-700'
+        }`}>
+          <h2 className={`text-xl font-semibold mb-6 ${
+            state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+          }`}>
+            {t('proofConfiguration')}
+          </h2>
           
           <div className="space-y-6">
             {/* Category Selection */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-3">Proof Category</label>
+              <label className={`block text-sm font-medium mb-3 ${
+                state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
+              }`}>
+                {t('proofCategory')}
+              </label>
               <div className="grid grid-cols-2 gap-2">
                 {categories.map((cat) => (
                   <button
@@ -197,8 +231,12 @@ This is simulated content for demonstration purposes only.`;
                     onClick={() => setSelectedCategory(cat.value as ExcuseCategory)}
                     className={`flex items-center space-x-2 p-3 rounded-lg border transition-all duration-200 ${
                       selectedCategory === cat.value
-                        ? 'bg-emerald-600/20 border-emerald-500 text-emerald-300'
-                        : 'bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700'
+                        ? state.preferences.theme === 'light'
+                          ? 'bg-emerald-100 border-emerald-300 text-emerald-700'
+                          : 'bg-emerald-600/20 border-emerald-500 text-emerald-300'
+                        : state.preferences.theme === 'light'
+                          ? 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+                          : 'bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700'
                     }`}
                   >
                     <span>{cat.icon}</span>
@@ -210,14 +248,20 @@ This is simulated content for demonstration purposes only.`;
 
             {/* Custom Content */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-3">
-                Custom Context (Optional)
+              <label className={`block text-sm font-medium mb-3 ${
+                state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
+              }`}>
+                {t('customContextOptional')}
               </label>
               <textarea
                 value={customContent}
                 onChange={(e) => setCustomContent(e.target.value)}
-                placeholder="Provide additional context to customize your proof..."
-                className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 resize-none"
+                placeholder={t('provideAdditionalContext')}
+                className={`w-full p-3 rounded-lg border focus:ring-1 resize-none transition-colors ${
+                  state.preferences.theme === 'light'
+                    ? 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-emerald-500 focus:ring-emerald-500'
+                    : 'bg-slate-700 border-slate-600 text-white placeholder-slate-400 focus:border-emerald-500 focus:ring-emerald-500'
+                }`}
                 rows={4}
               />
             </div>
@@ -225,18 +269,32 @@ This is simulated content for demonstration purposes only.`;
             {/* Recent Excuses for Reference */}
             {state.excuses.length > 0 && (
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-3">
-                  Recent Excuses (for reference)
+                <label className={`block text-sm font-medium mb-3 ${
+                  state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
+                }`}>
+                  {t('recentExcusesReference')}
                 </label>
                 <div className="space-y-2 max-h-40 overflow-y-auto">
                   {state.excuses.slice(0, 3).map((excuse) => (
                     <button
                       key={excuse.id}
                       onClick={() => setCustomContent(excuse.content)}
-                      className="w-full text-left p-3 bg-slate-700/50 hover:bg-slate-700 rounded-lg border border-slate-600 transition-colors"
+                      className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                        state.preferences.theme === 'light'
+                          ? 'bg-gray-50 hover:bg-gray-100 border-gray-200'
+                          : 'bg-slate-700/50 hover:bg-slate-700 border-slate-600'
+                      }`}
                     >
-                      <div className="font-medium text-white text-sm">{excuse.title}</div>
-                      <div className="text-slate-400 text-xs mt-1 line-clamp-2">{excuse.content}</div>
+                      <div className={`font-medium text-sm ${
+                        state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+                      }`}>
+                        {excuse.title}
+                      </div>
+                      <div className={`text-xs mt-1 line-clamp-2 ${
+                        state.preferences.theme === 'light' ? 'text-gray-600' : 'text-slate-400'
+                      }`}>
+                        {excuse.content}
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -254,25 +312,43 @@ This is simulated content for demonstration purposes only.`;
               ) : (
                 <Shield className="w-5 h-5" />
               )}
-              <span>{isGenerating ? 'Generating Proof...' : 'Generate Proof'}</span>
+              <span>{isGenerating ? t('generatingProof') : t('generateProof')}</span>
             </button>
           </div>
         </div>
 
         {/* Result Panel */}
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700 p-6">
-          <h2 className="text-xl font-semibold text-white mb-6">Generated Proof</h2>
+        <div className={`backdrop-blur-sm rounded-xl border p-6 ${
+          state.preferences.theme === 'light' 
+            ? 'bg-white/70 border-gray-200' 
+            : 'bg-slate-800/50 border-slate-700'
+        }`}>
+          <h2 className={`text-xl font-semibold mb-6 ${
+            state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+          }`}>
+            {t('generatedProof')}
+          </h2>
           
           {generatedProof ? (
             <div className="space-y-6">
               {/* Proof Type */}
-              <div className="flex items-center space-x-3 p-4 bg-slate-700/50 rounded-lg">
+              <div className={`flex items-center space-x-3 p-4 rounded-lg ${
+                state.preferences.theme === 'light' ? 'bg-gray-100' : 'bg-slate-700/50'
+              }`}>
                 {React.createElement(getProofIcon(generatedProof.type), {
-                  className: "w-6 h-6 text-emerald-400"
+                  className: state.preferences.theme === 'light' ? "w-6 h-6 text-emerald-600" : "w-6 h-6 text-emerald-400"
                 })}
                 <div>
-                  <h3 className="font-semibold text-white capitalize">{generatedProof.type} Proof</h3>
-                  <p className="text-sm text-slate-400">{generatedProof.filename}</p>
+                  <h3 className={`font-semibold capitalize ${
+                    state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+                  }`}>
+                    {t(generatedProof.type)} {t('proof')}
+                  </h3>
+                  <p className={`text-sm ${
+                    state.preferences.theme === 'light' ? 'text-gray-600' : 'text-slate-400'
+                  }`}>
+                    {generatedProof.filename}
+                  </p>
                 </div>
               </div>
 
@@ -281,21 +357,49 @@ This is simulated content for demonstration purposes only.`;
 
               {/* Proof Details */}
               <div className="space-y-3">
-                <div className="flex justify-between items-center py-2 border-b border-slate-600">
-                  <span className="text-slate-400">Type:</span>
-                  <span className="text-white capitalize">{generatedProof.type}</span>
+                <div className={`flex justify-between items-center py-2 border-b ${
+                  state.preferences.theme === 'light' ? 'border-gray-200' : 'border-slate-600'
+                }`}>
+                  <span className={state.preferences.theme === 'light' ? 'text-gray-600' : 'text-slate-400'}>
+                    {t('type')}:
+                  </span>
+                  <span className={`capitalize ${
+                    state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+                  }`}>
+                    {t(generatedProof.type)}
+                  </span>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-slate-600">
-                  <span className="text-slate-400">Filename:</span>
-                  <span className="text-white font-mono text-sm">{generatedProof.filename}</span>
+                <div className={`flex justify-between items-center py-2 border-b ${
+                  state.preferences.theme === 'light' ? 'border-gray-200' : 'border-slate-600'
+                }`}>
+                  <span className={state.preferences.theme === 'light' ? 'text-gray-600' : 'text-slate-400'}>
+                    {t('filename')}:
+                  </span>
+                  <span className={`font-mono text-sm ${
+                    state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+                  }`}>
+                    {generatedProof.filename}
+                  </span>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-slate-600">
-                  <span className="text-slate-400">Category:</span>
-                  <span className="text-white capitalize">{selectedCategory}</span>
+                <div className={`flex justify-between items-center py-2 border-b ${
+                  state.preferences.theme === 'light' ? 'border-gray-200' : 'border-slate-600'
+                }`}>
+                  <span className={state.preferences.theme === 'light' ? 'text-gray-600' : 'text-slate-400'}>
+                    {t('category')}:
+                  </span>
+                  <span className={`capitalize ${
+                    state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+                  }`}>
+                    {t(selectedCategory)}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-slate-400">Generated:</span>
-                  <span className="text-white">{new Date().toLocaleString()}</span>
+                  <span className={state.preferences.theme === 'light' ? 'text-gray-600' : 'text-slate-400'}>
+                    {t('generated')}:
+                  </span>
+                  <span className={state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'}>
+                    {new Date().toLocaleString()}
+                  </span>
                 </div>
               </div>
 
@@ -306,29 +410,45 @@ This is simulated content for demonstration purposes only.`;
                   className="flex items-center justify-center space-x-2 p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                 >
                   <Eye className="w-4 h-4" />
-                  <span>Preview</span>
+                  <span>{t('preview')}</span>
                 </button>
                 <button 
                   onClick={handleDownload}
                   className="flex items-center justify-center space-x-2 p-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
                 >
                   <Download className="w-4 h-4" />
-                  <span>Download</span>
+                  <span>{t('download')}</span>
                 </button>
               </div>
 
               {/* Disclaimer */}
-              <div className="p-3 bg-orange-600/20 border border-orange-500/50 rounded-lg">
-                <p className="text-orange-300 text-xs">
-                  ⚠️ Generated proofs are for entertainment purposes only. Use responsibly and ethically.
+              <div className={`p-3 rounded-lg border ${
+                state.preferences.theme === 'light'
+                  ? 'bg-orange-50 border-orange-200'
+                  : 'bg-orange-600/20 border-orange-500/50'
+              }`}>
+                <p className={`text-xs ${
+                  state.preferences.theme === 'light' ? 'text-orange-700' : 'text-orange-300'
+                }`}>
+                  ⚠️ {t('proofDisclaimer')}
                 </p>
               </div>
             </div>
           ) : (
             <div className="text-center py-12">
-              <Shield className="w-16 h-16 text-slate-500 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-slate-300 mb-2">Ready to Generate Proof</h3>
-              <p className="text-slate-400">Select a category and click generate to create supporting evidence</p>
+              <Shield className={`w-16 h-16 mx-auto mb-4 ${
+                state.preferences.theme === 'light' ? 'text-gray-400' : 'text-slate-500'
+              }`} />
+              <h3 className={`text-lg font-medium mb-2 ${
+                state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
+              }`}>
+                {t('readyToGenerateProof')}
+              </h3>
+              <p className={`${
+                state.preferences.theme === 'light' ? 'text-gray-500' : 'text-slate-400'
+              }`}>
+                {t('selectCategoryAndGenerate')}
+              </p>
             </div>
           )}
         </div>
@@ -340,7 +460,7 @@ This is simulated content for demonstration purposes only.`;
           <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900">
-                {generatedProof.type.charAt(0).toUpperCase() + generatedProof.type.slice(1)} Preview
+                {t(generatedProof.type)} {t('preview')}
               </h3>
               <button
                 onClick={() => setShowPreview(false)}
@@ -354,10 +474,10 @@ This is simulated content for demonstration purposes only.`;
                 <div className="font-mono text-sm">
                   <div className="bg-gray-50 p-4 rounded-lg border mb-4">
                     <div className="space-y-2 text-xs">
-                      <div><strong>From:</strong> {generatedProof.sender || 'noreply@example.com'}</div>
-                      <div><strong>To:</strong> me@example.com</div>
-                      <div><strong>Subject:</strong> {generatedProof.subject || 'Important Notice'}</div>
-                      <div><strong>Date:</strong> {new Date().toLocaleString()}</div>
+                      <div><strong>{t('from')}:</strong> {generatedProof.sender || 'noreply@example.com'}</div>
+                      <div><strong>{t('to')}:</strong> me@example.com</div>
+                      <div><strong>{t('subject')}:</strong> {generatedProof.subject || t('importantNotice')}</div>
+                      <div><strong>{t('date')}:</strong> {new Date().toLocaleString()}</div>
                     </div>
                   </div>
                   <div className="whitespace-pre-wrap bg-white p-4 border rounded-lg">
@@ -368,15 +488,15 @@ This is simulated content for demonstration purposes only.`;
                 <div className="max-w-2xl mx-auto">
                   <div className="text-center border-b border-gray-300 pb-6 mb-6">
                     <FileText className="w-12 h-12 text-blue-600 mx-auto mb-3" />
-                    <h2 className="text-2xl font-bold text-gray-900">{generatedProof.documentTitle || 'Official Document'}</h2>
-                    <p className="text-gray-600 mt-2">Document ID: {generatedProof.documentId || 'DOC-' + Date.now()}</p>
+                    <h2 className="text-2xl font-bold text-gray-900">{generatedProof.documentTitle || t('officialDocument')}</h2>
+                    <p className="text-gray-600 mt-2">{t('documentId')}: {generatedProof.documentId || 'DOC-' + Date.now()}</p>
                   </div>
                   <div className="space-y-4">
                     <p className="leading-relaxed text-gray-800">{generatedProof.fullContent || generatedProof.content}</p>
                     <div className="mt-8 pt-6 border-t border-gray-300 text-sm text-gray-600">
                       <div className="flex justify-between">
-                        <span>Authority: {generatedProof.authority || 'Official Authority'}</span>
-                        <span>Date: {new Date().toLocaleDateString()}</span>
+                        <span>{t('authority')}: {generatedProof.authority || t('officialAuthority')}</span>
+                        <span>{t('date')}: {new Date().toLocaleDateString()}</span>
                       </div>
                     </div>
                   </div>
@@ -389,7 +509,7 @@ This is simulated content for demonstration purposes only.`;
                   <h3 className="text-xl font-semibold text-gray-900 mb-3">{generatedProof.content}</h3>
                   <p className="text-gray-600 mb-6">{generatedProof.description}</p>
                   <div className="bg-gray-50 p-6 rounded-lg border-2 border-dashed border-gray-300">
-                    <p className="text-gray-700">{generatedProof.previewContent || 'Detailed content would be displayed here'}</p>
+                    <p className="text-gray-700">{generatedProof.previewContent || t('detailedContentHere')}</p>
                   </div>
                 </div>
               )}

@@ -17,7 +17,7 @@ export default function DashboardHome() {
 
   const stats = [
     {
-      label: t('generateExcuse'),
+      label: t('generatedExcuses'),
       value: state.excuses.length,
       icon: MessageSquareText,
       color: 'from-blue-500 to-blue-600',
@@ -38,7 +38,7 @@ export default function DashboardHome() {
       change: '+3%'
     },
     {
-      label: 'Avg. Believability',
+      label: t('avgBelievability'),
       value: state.excuses.length > 0 
         ? Math.round(state.excuses.reduce((acc, e) => acc + e.believabilityScore, 0) / state.excuses.length)
         : 0,
@@ -60,12 +60,12 @@ export default function DashboardHome() {
         <h1 className={`text-3xl font-bold mb-2 ${
           state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
         }`}>
-          Welcome back
+          {t('welcomeBack')}
         </h1>
         <p className={`${
           state.preferences.theme === 'light' ? 'text-gray-600' : 'text-slate-400'
         }`}>
-          Here's what's happening with your excuse system today.
+          {t('dashboardSubtitle')}
         </p>
       </div>
 
@@ -114,13 +114,13 @@ export default function DashboardHome() {
             <h2 className={`text-xl font-semibold ${
               state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
             }`}>
-              Recent Excuses
+              {t('recentExcuses')}
             </h2>
             <button
               onClick={() => dispatch({ type: 'SET_VIEW', payload: 'generator' })}
               className="px-4 py-2 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-lg font-medium hover:shadow-lg transition-all duration-200"
             >
-              Generate New
+              {t('generateNew')}
             </button>
           </div>
           
@@ -180,7 +180,7 @@ export default function DashboardHome() {
               <p className={`${
                 state.preferences.theme === 'light' ? 'text-gray-600' : 'text-slate-400'
               }`}>
-                No excuses generated yet
+                {t('noExcusesYet')}
               </p>
               <button
                 onClick={() => dispatch({ type: 'SET_VIEW', payload: 'generator' })}
@@ -190,7 +190,7 @@ export default function DashboardHome() {
                     : 'text-blue-400 hover:text-blue-300'
                 }`}
               >
-                Create your first excuse
+                {t('createFirstExcuse')}
               </button>
             </div>
           )}
@@ -205,7 +205,7 @@ export default function DashboardHome() {
           <h2 className={`text-xl font-semibold mb-6 ${
             state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
           }`}>
-            Quick Actions
+            {t('quickActions')}
           </h2>
           
           <div className="space-y-3">
@@ -229,7 +229,7 @@ export default function DashboardHome() {
                 <p className={`text-sm ${
                   state.preferences.theme === 'light' ? 'text-gray-600' : 'text-slate-400'
                 }`}>
-                  Create a context-aware excuse
+                  {t('createContextAware')}
                 </p>
               </div>
             </button>
@@ -254,7 +254,7 @@ export default function DashboardHome() {
                 <p className={`text-sm ${
                   state.preferences.theme === 'light' ? 'text-gray-600' : 'text-slate-400'
                 }`}>
-                  Create supporting evidence
+                  {t('createSupportingEvidence')}
                 </p>
               </div>
             </button>
@@ -279,7 +279,7 @@ export default function DashboardHome() {
                 <p className={`text-sm ${
                   state.preferences.theme === 'light' ? 'text-gray-600' : 'text-slate-400'
                 }`}>
-                  Set up automated alerts
+                  {t('setupAutomatedAlerts')}
                 </p>
               </div>
             </button>

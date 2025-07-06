@@ -54,14 +54,14 @@ export default function SettingsPanel() {
   ];
 
   const categories = [
-    { value: 'work', label: 'Work', icon: '💼' },
-    { value: 'medical', label: 'Medical', icon: '🏥' },
-    { value: 'family', label: 'Family', icon: '👨‍👩‍👧‍👦' },
-    { value: 'transport', label: 'Transport', icon: '🚗' },
-    { value: 'technology', label: 'Technology', icon: '💻' },
-    { value: 'weather', label: 'Weather', icon: '🌧️' },
-    { value: 'emergency', label: 'Emergency', icon: '🚨' },
-    { value: 'personal', label: 'Personal', icon: '👤' }
+    { value: 'work', label: t('work'), icon: '💼' },
+    { value: 'medical', label: t('medical'), icon: '🏥' },
+    { value: 'family', label: t('family'), icon: '👨‍👩‍👧‍👦' },
+    { value: 'transport', label: t('transport'), icon: '🚗' },
+    { value: 'technology', label: t('technology'), icon: '💻' },
+    { value: 'weather', label: t('weather'), icon: '🌧️' },
+    { value: 'emergency', label: t('emergency'), icon: '🚨' },
+    { value: 'personal', label: t('personal'), icon: '👤' }
   ];
 
   const getCurrentLanguageName = () => {
@@ -70,10 +70,10 @@ export default function SettingsPanel() {
   };
 
   const handleClearAllData = () => {
-    if (window.confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
+    if (window.confirm(t('confirmClearAllData'))) {
       // Clear all data by dispatching multiple actions
       dispatch({ type: 'CLEAR_ALL_DATA' });
-      alert('All data has been cleared successfully.');
+      alert(t('allDataCleared'));
     }
   };
 
@@ -92,7 +92,7 @@ export default function SettingsPanel() {
         <p className={`${
           state.preferences.theme === 'light' ? 'text-gray-600' : 'text-slate-400'
         }`}>
-          Customize your excuse generator preferences
+          {t('customizeExcuseGenerator')}
         </p>
       </div>
 
@@ -110,7 +110,7 @@ export default function SettingsPanel() {
             <h2 className={`text-xl font-semibold ${
               state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
             }`}>
-              General Settings
+              {t('generalSettings')}
             </h2>
           </div>
 
@@ -121,7 +121,7 @@ export default function SettingsPanel() {
                 state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
               }`}>
                 <Globe className="w-4 h-4" />
-                <span>Default Language</span>
+                <span>{t('defaultLanguage')}</span>
               </label>
               <div className="relative">
                 <select
@@ -143,7 +143,7 @@ export default function SettingsPanel() {
               <p className={`text-xs mt-2 ${
                 state.preferences.theme === 'light' ? 'text-gray-500' : 'text-slate-400'
               }`}>
-                Current: {getCurrentLanguageName()}
+                {t('current')}: {getCurrentLanguageName()}
               </p>
             </div>
 
@@ -153,12 +153,12 @@ export default function SettingsPanel() {
                 state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
               }`}>
                 <Palette className="w-4 h-4" />
-                <span>Theme</span>
+                <span>{t('theme')}</span>
               </label>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { value: 'dark', label: 'Dark Mode', icon: '🌙' },
-                  { value: 'light', label: 'Light Mode', icon: '☀️' }
+                  { value: 'dark', label: t('darkMode'), icon: '🌙' },
+                  { value: 'light', label: t('lightMode'), icon: '☀️' }
                 ].map((theme) => (
                   <button
                     key={theme.value}
@@ -186,7 +186,7 @@ export default function SettingsPanel() {
                 state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
               }`}>
                 <Volume2 className="w-4 h-4" />
-                <span>Voice Playback</span>
+                <span>{t('voicePlayback')}</span>
               </label>
               <button
                 onClick={() => handlePreferenceUpdate('voiceEnabled', !state.preferences.voiceEnabled)}
@@ -210,7 +210,7 @@ export default function SettingsPanel() {
                 state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
               }`}>
                 <Shield className="w-4 h-4" />
-                <span>Auto-generate Proof</span>
+                <span>{t('autoGenerateProof')}</span>
               </label>
               <button
                 onClick={() => handlePreferenceUpdate('autoProofGeneration', !state.preferences.autoProofGeneration)}
@@ -234,7 +234,7 @@ export default function SettingsPanel() {
                 state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
               }`}>
                 <Bell className="w-4 h-4" />
-                <span>Emergency Contacts</span>
+                <span>{t('emergencyContacts')}</span>
               </label>
               <button
                 onClick={() => handlePreferenceUpdate('emergencyContactsEnabled', !state.preferences.emergencyContactsEnabled)}
@@ -267,14 +267,14 @@ export default function SettingsPanel() {
             <h2 className={`text-xl font-semibold ${
               state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
             }`}>
-              Preferred Categories
+              {t('preferredCategories')}
             </h2>
           </div>
 
           <p className={`text-sm mb-4 ${
             state.preferences.theme === 'light' ? 'text-gray-600' : 'text-slate-400'
           }`}>
-            Select your most commonly used excuse categories for faster generation
+            {t('selectMostCommonlyUsed')}
           </p>
 
           <div className="grid grid-cols-2 gap-2">
@@ -321,7 +321,7 @@ export default function SettingsPanel() {
             <h2 className={`text-xl font-semibold ${
               state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
             }`}>
-              Data Management
+              {t('dataManagement')}
             </h2>
           </div>
 
@@ -333,12 +333,12 @@ export default function SettingsPanel() {
                 <h3 className={`font-medium ${
                   state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
                 }`}>
-                  Generated Excuses
+                  {t('generatedExcuses')}
                 </h3>
                 <p className={`text-sm ${
                   state.preferences.theme === 'light' ? 'text-gray-500' : 'text-slate-400'
                 }`}>
-                  {state.excuses.length} items
+                  {state.excuses.length} {t('items')}
                 </p>
               </div>
               <button className={`px-4 py-2 rounded-lg transition-colors text-sm ${
@@ -346,7 +346,7 @@ export default function SettingsPanel() {
                   ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                   : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
               }`}>
-                Export
+                {t('export')}
               </button>
             </div>
 
@@ -357,12 +357,12 @@ export default function SettingsPanel() {
                 <h3 className={`font-medium ${
                   state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
                 }`}>
-                  Saved Excuses
+                  {t('savedExcuses')}
                 </h3>
                 <p className={`text-sm ${
                   state.preferences.theme === 'light' ? 'text-gray-500' : 'text-slate-400'
                 }`}>
-                  {state.savedExcuses.length} items
+                  {state.savedExcuses.length} {t('items')}
                 </p>
               </div>
               <button className={`px-4 py-2 rounded-lg transition-colors text-sm ${
@@ -370,7 +370,7 @@ export default function SettingsPanel() {
                   ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                   : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
               }`}>
-                Export
+                {t('export')}
               </button>
             </div>
 
@@ -381,12 +381,12 @@ export default function SettingsPanel() {
                 <h3 className={`font-medium ${
                   state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
                 }`}>
-                  Emergency Alerts
+                  {t('emergencyAlerts')}
                 </h3>
                 <p className={`text-sm ${
                   state.preferences.theme === 'light' ? 'text-gray-500' : 'text-slate-400'
                 }`}>
-                  {state.emergencyAlerts.length} items
+                  {state.emergencyAlerts.length} {t('items')}
                 </p>
               </div>
               <button className={`px-4 py-2 rounded-lg transition-colors text-sm ${
@@ -394,7 +394,7 @@ export default function SettingsPanel() {
                   ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                   : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
               }`}>
-                Clear All
+                {t('clearAll')}
               </button>
             </div>
 
@@ -407,7 +407,7 @@ export default function SettingsPanel() {
                     : 'bg-red-600/20 hover:bg-red-600/30 text-red-400 border-red-500/50'
                 }`}
               >
-                Clear All Data
+                {t('clearAllData')}
               </button>
             </div>
           </div>
@@ -422,41 +422,40 @@ export default function SettingsPanel() {
           <h2 className={`text-xl font-semibold mb-6 ${
             state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
           }`}>
-            About ExcuseAI
+            {t('aboutExcuseAI')}
           </h2>
           
           <div className={`space-y-4 text-sm ${
             state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
           }`}>
             <p>
-              ExcuseAI is an advanced excuse generation system powered by artificial intelligence. 
-              It creates context-aware, believable excuses tailored to your specific situation.
+              {t('excuseAIDescription')}
             </p>
             
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className={state.preferences.theme === 'light' ? 'text-gray-500' : 'text-slate-400'}>
-                  Version:
+                  {t('version')}:
                 </span>
                 <span>1.0.0</span>
               </div>
               <div className="flex justify-between">
                 <span className={state.preferences.theme === 'light' ? 'text-gray-500' : 'text-slate-400'}>
-                  Build:
+                  {t('build')}:
                 </span>
                 <span>2024.01.15</span>
               </div>
               <div className="flex justify-between">
                 <span className={state.preferences.theme === 'light' ? 'text-gray-500' : 'text-slate-400'}>
-                  Language:
+                  {t('language')}:
                 </span>
                 <span className="capitalize">{getCurrentLanguageName()}</span>
               </div>
               <div className="flex justify-between">
                 <span className={state.preferences.theme === 'light' ? 'text-gray-500' : 'text-slate-400'}>
-                  Theme:
+                  {t('theme')}:
                 </span>
-                <span className="capitalize">{state.preferences.theme} Mode</span>
+                <span className="capitalize">{t(state.preferences.theme + 'Mode')}</span>
               </div>
             </div>
 
@@ -466,8 +465,7 @@ export default function SettingsPanel() {
               <p className={`text-xs ${
                 state.preferences.theme === 'light' ? 'text-gray-500' : 'text-slate-400'
               }`}>
-                ⚠️ This tool is for entertainment purposes only. Use responsibly and ethically. 
-                Do not use generated content for deceptive or harmful purposes.
+                ⚠️ {t('toolDisclaimer')}
               </p>
             </div>
           </div>

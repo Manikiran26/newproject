@@ -1,4 +1,5 @@
 import { ProofType, ExcuseCategory } from '../types';
+import { translations } from './translations';
 
 export interface ProofData {
   type: ProofType;
@@ -15,7 +16,7 @@ export interface ProofData {
   previewContent?: string;
 }
 
-export function generateProof(category: ExcuseCategory, content: string): ProofData {
+export function generateProof(category: ExcuseCategory, content: string, language: string = 'en'): ProofData {
   const proofGenerators = {
     medical: generateMedicalProof,
     transport: generateTransportProof,
@@ -28,137 +29,142 @@ export function generateProof(category: ExcuseCategory, content: string): ProofD
   };
 
   const generator = proofGenerators[category] || generatePersonalProof;
-  return generator(content);
+  return generator(content, language);
 }
 
-function generateMedicalProof(content: string): ProofData {
+function getTranslation(key: string, language: string): string {
+  const lang = language as keyof typeof translations;
+  return translations[lang]?.[key as keyof typeof translations.en] || translations.en[key as keyof typeof translations.en] || key;
+}
+
+function generateMedicalProof(content: string, language: string): ProofData {
   const proofTypes: ProofType[] = ['screenshot', 'document', 'email'];
   const selectedType = proofTypes[Math.floor(Math.random() * proofTypes.length)];
   
   const proofs = {
     screenshot: {
       type: 'screenshot' as ProofType,
-      content: 'Screenshot of appointment confirmation from hospital app',
-      description: 'Mobile app notification showing emergency appointment booking',
+      content: getTranslation('screenshotAppointmentConfirmation', language),
+      description: getTranslation('mobileAppNotification', language),
       filename: 'appointment_confirmation.png',
-      previewContent: 'City Hospital Mobile App\n\nAppointment Confirmed\n\nDr. Sarah Johnson, MD\nEmergency Consultation\nDate: Today, 2:30 PM\nLocation: Emergency Wing\nReference: #EMG-2024-0157\n\nPlease arrive 15 minutes early.\nBring valid ID and insurance card.'
+      previewContent: `${getTranslation('cityHospitalMobileApp', language)}\n\n${getTranslation('appointmentConfirmed', language)}\n\n${getTranslation('drSarahJohnson', language)}, MD\n${getTranslation('emergencyConsultation', language)}\n${getTranslation('date', language)}: ${getTranslation('today', language)}, 2:30 PM\n${getTranslation('location', language)}: ${getTranslation('emergencyWing', language)}\n${getTranslation('reference', language)}: #EMG-2024-0157\n\n${getTranslation('pleaseArrive15Minutes', language)}\n${getTranslation('bringValidID', language)}`
     },
     document: {
       type: 'document' as ProofType,
-      content: 'Medical certificate from Dr. Sarah Johnson, MD',
-      description: 'Official medical certificate recommending rest and recovery',
+      content: getTranslation('medicalCertificateFromDr', language),
+      description: getTranslation('officialMedicalCertificate', language),
       filename: 'medical_certificate.pdf',
-      documentTitle: 'Medical Certificate',
+      documentTitle: getTranslation('medicalCertificate', language),
       documentId: 'MC-2024-' + Math.floor(Math.random() * 10000),
-      authority: 'City General Hospital',
-      fullContent: 'This is to certify that the patient has been examined and found to be suffering from acute gastroenteritis. The patient is advised complete bed rest for 24-48 hours and should avoid solid foods. Return to normal activities is recommended only after symptoms have completely subsided.\n\nThis condition is highly contagious and the patient should remain isolated to prevent spread to others.\n\nMedical attention was sought due to severe symptoms including nausea, vomiting, and dehydration requiring immediate care.'
+      authority: getTranslation('cityGeneralHospital', language),
+      fullContent: getTranslation('medicalCertificateContent', language)
     },
     email: {
       type: 'email' as ProofType,
-      content: 'Email from reception@cityhospital.com regarding urgent consultation',
-      description: 'Hospital email confirming emergency appointment slot',
+      content: getTranslation('emailFromReception', language),
+      description: getTranslation('hospitalEmailConfirming', language),
       filename: 'hospital_email.png',
       sender: 'reception@cityhospital.com',
-      subject: 'Emergency Appointment Confirmation - Urgent',
-      fullContent: 'Dear Patient,\n\nThis email confirms your emergency appointment scheduled for today at 2:30 PM with Dr. Sarah Johnson in our Emergency Wing.\n\nAppointment Details:\n- Date: ' + new Date().toLocaleDateString() + '\n- Time: 2:30 PM\n- Doctor: Dr. Sarah Johnson, MD\n- Department: Emergency Medicine\n- Reference: EMG-2024-0157\n\nPlease arrive 15 minutes early and bring:\n- Valid photo ID\n- Insurance card\n- List of current medications\n\nIf you need to reschedule, please call (555) 123-4567 immediately.\n\nCity General Hospital\nEmergency Department'
+      subject: getTranslation('emergencyAppointmentConfirmation', language),
+      fullContent: getTranslation('hospitalEmailContent', language)
     }
   };
   
   return proofs[selectedType];
 }
 
-function generateTransportProof(content: string): ProofData {
+function generateTransportProof(content: string, language: string): ProofData {
   const proofTypes: ProofType[] = ['photo', 'screenshot', 'receipt'];
   const selectedType = proofTypes[Math.floor(Math.random() * proofTypes.length)];
   
   const proofs = {
     photo: {
       type: 'photo' as ProofType,
-      content: 'Photo of broken down vehicle with hazard lights on',
-      description: 'Clear image showing car stopped on roadside with visible damage',
+      content: getTranslation('photoBrokenDownVehicle', language),
+      description: getTranslation('clearImageShowingCar', language),
       filename: 'breakdown_photo.jpg',
-      photoDetails: 'Vehicle stopped on highway shoulder with hazard lights flashing, visible steam from engine compartment, emergency triangle placed behind vehicle'
+      photoDetails: getTranslation('vehicleStoppedHighway', language)
     },
     screenshot: {
       type: 'screenshot' as ProofType,
-      content: 'Screenshot of ride-sharing app showing "No drivers available"',
-      description: 'App interface displaying service unavailability in area',
+      content: getTranslation('screenshotRideSharing', language),
+      description: getTranslation('appInterfaceDisplaying', language),
       filename: 'rideshare_unavailable.png',
-      previewContent: 'UberX\n\nNo drivers available\n\nThere are no drivers in your area right now. This could be due to high demand or weather conditions.\n\nEstimated wait time: 45+ minutes\n\nTry again later or consider alternative transportation.\n\nLast updated: ' + new Date().toLocaleTimeString()
+      previewContent: `UberX\n\n${getTranslation('noDriversAvailable', language)}\n\n${getTranslation('noDriversInArea', language)}\n\n${getTranslation('estimatedWaitTime', language)}: 45+ ${getTranslation('minutes', language)}\n\n${getTranslation('tryAgainLater', language)}\n\n${getTranslation('lastUpdated', language)}: ` + new Date().toLocaleTimeString()
     },
     receipt: {
       type: 'receipt' as ProofType,
-      content: 'Towing service receipt from AAA Roadside Assistance',
-      description: 'Official receipt showing emergency towing charges',
+      content: getTranslation('towingServiceReceipt', language),
+      description: getTranslation('officialReceiptShowing', language),
       filename: 'towing_receipt.pdf',
-      previewContent: 'AAA ROADSIDE ASSISTANCE\nEmergency Towing Service\n\nReceipt #: TOW-' + Math.floor(Math.random() * 100000) + '\nDate: ' + new Date().toLocaleDateString() + '\nTime: ' + new Date().toLocaleTimeString() + '\n\nServices Provided:\n- Emergency Roadside Assistance\n- Vehicle Towing (15 miles)\n- Diagnostic Check\n\nTotal: $125.00\nPaid: Credit Card\n\nThank you for choosing AAA!'
+      previewContent: `AAA ${getTranslation('roadsideAssistance', language)}\n${getTranslation('emergencyTowingService', language)}\n\n${getTranslation('receipt', language)} #: TOW-` + Math.floor(Math.random() * 100000) + `\n${getTranslation('date', language)}: ` + new Date().toLocaleDateString() + `\n${getTranslation('time', language)}: ` + new Date().toLocaleTimeString() + `\n\n${getTranslation('servicesProvided', language)}:\n- ${getTranslation('emergencyRoadsideAssistance', language)}\n- ${getTranslation('vehicleTowing', language)} (15 ${getTranslation('miles', language)})\n- ${getTranslation('diagnosticCheck', language)}\n\n${getTranslation('total', language)}: $125.00\n${getTranslation('paid', language)}: ${getTranslation('creditCard', language)}\n\n${getTranslation('thankYouAAA', language)}`
     }
   };
   
   return proofs[selectedType];
 }
 
-function generateWorkProof(content: string): ProofData {
+function generateWorkProof(content: string, language: string): ProofData {
   return {
     type: 'email',
-    content: 'Email thread with client regarding urgent deadline changes',
-    description: 'Client communication showing critical project requirements',
+    content: getTranslation('emailThreadWithClient', language),
+    description: getTranslation('clientCommunicationShowing', language),
     filename: 'client_emergency.png',
     sender: 'client@importantcompany.com',
-    subject: 'URGENT: Project Deadline Moved Up - Immediate Action Required',
-    fullContent: 'Hi there,\n\nI hope this email finds you well. Unfortunately, I have some urgent news regarding our project timeline.\n\nDue to unexpected changes in our board meeting schedule, we need to move up the project delivery date by 48 hours. The new deadline is now ' + new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toLocaleDateString() + ' at 9:00 AM.\n\nI understand this is extremely short notice, but this project is critical for our Q1 presentation to stakeholders. We\'re willing to discuss additional compensation for the rush delivery.\n\nPlease confirm receipt of this email and let me know if you can accommodate this timeline change.\n\nBest regards,\nJohn Smith\nProject Manager\nImportant Company Inc.'
+    subject: getTranslation('urgentProjectDeadline', language),
+    fullContent: getTranslation('clientEmailContent', language)
   };
 }
 
-function generateFamilyProof(content: string): ProofData {
+function generateFamilyProof(content: string, language: string): ProofData {
   return {
     type: 'message',
-    content: 'Text message from family member about emergency situation',
-    description: 'SMS conversation showing family crisis details',
+    content: getTranslation('textMessageFromFamily', language),
+    description: getTranslation('smsConversationShowing', language),
     filename: 'family_messages.png',
-    previewContent: 'Mom (2 minutes ago)\nHoney, I need you to come to the hospital right away. Dad had a fall and we\'re in the emergency room. He\'s conscious but they want to run some tests.\n\nYou (1 minute ago)\nOh no! Which hospital? I\'m leaving work now.\n\nMom (Just now)\nSt. Mary\'s Hospital, Emergency entrance. Room 12. Please hurry but drive safely. I\'ll keep you updated.\n\nDelivered ✓'
+    previewContent: getTranslation('familyMessageContent', language)
   };
 }
 
-function generateTechProof(content: string): ProofData {
+function generateTechProof(content: string, language: string): ProofData {
   return {
     type: 'screenshot',
-    content: 'Screenshot of system error message and internet speed test',
-    description: 'Technical diagnostics showing connectivity/system failures',
+    content: getTranslation('screenshotSystemError', language),
+    description: getTranslation('technicalDiagnosticsShowing', language),
     filename: 'tech_error.png',
-    previewContent: 'SYSTEM ERROR\n\nConnection Failed\nError Code: 0x80070057\n\nYour internet connection appears to be offline. Please check your network settings and try again.\n\nInternet Speed Test Results:\nDownload: 0.00 Mbps\nUpload: 0.00 Mbps\nPing: Timeout\n\nLast successful connection: Yesterday 11:47 PM\n\nTroubleshooting steps attempted:\n✓ Restart router\n✓ Check cables\n✓ Contact ISP\n\nISP Status: Outage reported in your area\nEstimated repair time: 4-6 hours'
+    previewContent: getTranslation('systemErrorContent', language)
   };
 }
 
-function generateWeatherProof(content: string): ProofData {
+function generateWeatherProof(content: string, language: string): ProofData {
   return {
     type: 'photo',
-    content: 'Photo of severe weather conditions affecting travel',
-    description: 'Image showing dangerous weather conditions in local area',
+    content: getTranslation('photoSevereWeather', language),
+    description: getTranslation('imageShowingDangerous', language),
     filename: 'weather_conditions.jpg',
-    photoDetails: 'Heavy flooding on main road with water level reaching car door height, multiple vehicles stranded, emergency vehicles present, road closure signs visible'
+    photoDetails: getTranslation('heavyFloodingMainRoad', language)
   };
 }
 
-function generateEmergencyProof(content: string): ProofData {
+function generateEmergencyProof(content: string, language: string): ProofData {
   return {
     type: 'document',
-    content: 'Police incident report or emergency services documentation',
-    description: 'Official documentation of emergency situation involvement',
+    content: getTranslation('policeIncidentReport', language),
+    description: getTranslation('officialDocumentationEmergency', language),
     filename: 'incident_report.pdf',
-    documentTitle: 'Police Incident Report',
+    documentTitle: getTranslation('policeIncidentReport', language),
     documentId: 'PIR-2024-' + Math.floor(Math.random() * 100000),
-    authority: 'Metropolitan Police Department',
-    fullContent: 'INCIDENT REPORT\n\nIncident Number: ' + Math.floor(Math.random() * 1000000) + '\nDate: ' + new Date().toLocaleDateString() + '\nTime: ' + new Date().toLocaleTimeString() + '\nLocation: Main Street & 5th Avenue\n\nNature of Incident: Traffic Accident - Witness Statement Required\n\nSummary: Witness observed motor vehicle collision at intersection. Statement required for insurance and legal proceedings. Witness cooperation essential for case resolution.\n\nWitness Information:\nStatus: Cooperative witness\nStatement: Provided on scene\nFollow-up: May be required for court proceedings\n\nOfficer Badge #: 4521\nReport Filed: ' + new Date().toLocaleString()
+    authority: getTranslation('metropolitanPoliceDepartment', language),
+    fullContent: getTranslation('incidentReportContent', language)
   };
 }
 
-function generatePersonalProof(content: string): ProofData {
+function generatePersonalProof(content: string, language: string): ProofData {
   return {
     type: 'photo',
-    content: 'Photo evidence of personal emergency situation',
-    description: 'Visual proof of circumstances preventing attendance',
+    content: getTranslation('photoEvidencePersonal', language),
+    description: getTranslation('visualProofCircumstances', language),
     filename: 'personal_emergency.jpg',
-    photoDetails: 'Locked out of residence, keys visible inside through window, locksmith business card in hand, timestamp showing current date and time'
+    photoDetails: getTranslation('lockedOutResidence', language)
   };
 }

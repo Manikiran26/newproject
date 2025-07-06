@@ -42,7 +42,13 @@ const initialState: AppState = {
 function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
     case 'ADD_EXCUSE':
-      return { ...state, excuses: [action.payload, ...state.excuses] };
+      // Also add to saved excuses automatically
+      const newExcuse = action.payload;
+      return { 
+        ...state, 
+        excuses: [newExcuse, ...state.excuses],
+        savedExcuses: [newExcuse, ...state.savedExcuses]
+      };
     case 'SAVE_EXCUSE':
       // Check if excuse is already saved to avoid duplicates
       const isAlreadySaved = state.savedExcuses.some(e => e.id === action.payload.id);

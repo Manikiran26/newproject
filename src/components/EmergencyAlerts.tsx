@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../contexts/AppContext';
+import { useTranslation } from '../utils/translations';
 import { EmergencyAlert } from '../types';
 import { 
   AlertTriangle, 
@@ -15,6 +16,7 @@ import {
 
 export default function EmergencyAlerts() {
   const { state, dispatch } = useApp();
+  const { t } = useTranslation(state.preferences.defaultLanguage);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newAlert, setNewAlert] = useState({
     type: 'call' as const,
@@ -48,25 +50,37 @@ export default function EmergencyAlerts() {
   };
 
   const alertTypes = [
-    { value: 'call', label: 'Phone Call', icon: Phone, color: 'from-red-500 to-red-600' },
-    { value: 'text', label: 'Text Message', icon: MessageSquare, color: 'from-blue-500 to-blue-600' },
-    { value: 'email', label: 'Email', icon: Mail, color: 'from-green-500 to-green-600' }
+    { value: 'call', label: t('phoneCall'), icon: Phone, color: 'from-red-500 to-red-600' },
+    { value: 'text', label: t('textMessage'), icon: MessageSquare, color: 'from-blue-500 to-blue-600' },
+    { value: 'email', label: t('email'), icon: Mail, color: 'from-green-500 to-green-600' }
   ];
 
   return (
-    <div className="p-8">
+    <div className={`p-8 min-h-screen transition-colors duration-300 ${
+      state.preferences.theme === 'light' 
+        ? 'bg-gradient-to-br from-gray-50 via-blue-50 to-gray-50' 
+        : 'bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900'
+    }`}>
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Emergency Alerts</h1>
-            <p className="text-slate-400">Set up automated emergency calls, texts, and emails to support your excuses</p>
+            <h1 className={`text-3xl font-bold mb-2 ${
+              state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+            }`}>
+              {t('emergencyAlerts')}
+            </h1>
+            <p className={`${
+              state.preferences.theme === 'light' ? 'text-gray-600' : 'text-slate-400'
+            }`}>
+              {t('setupAutomatedEmergencyAlerts')}
+            </p>
           </div>
           <button
             onClick={() => setShowCreateForm(true)}
             className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-lg font-medium hover:shadow-lg transition-all duration-200"
           >
             <Plus className="w-5 h-5" />
-            <span>Create Alert</span>
+            <span>{t('createAlert')}</span>
           </button>
         </div>
       </div>
@@ -78,17 +92,33 @@ export default function EmergencyAlerts() {
           const alertCount = state.emergencyAlerts.filter(a => a.type === type.value).length;
           
           return (
-            <div key={type.value} className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700 p-6">
+            <div key={type.value} className={`backdrop-blur-sm rounded-xl border p-6 ${
+              state.preferences.theme === 'light' 
+                ? 'bg-white/70 border-gray-200' 
+                : 'bg-slate-800/50 border-slate-700'
+            }`}>
               <div className="flex items-center space-x-3 mb-4">
                 <div className={`w-12 h-12 bg-gradient-to-r ${type.color} rounded-lg flex items-center justify-center`}>
                   <Icon className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white">{type.label}</h3>
-                  <p className="text-sm text-slate-400">{alertCount} active alerts</p>
+                  <h3 className={`font-semibold ${
+                    state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+                  }`}>
+                    {type.label}
+                  </h3>
+                  <p className={`text-sm ${
+                    state.preferences.theme === 'light' ? 'text-gray-600' : 'text-slate-400'
+                  }`}>
+                    {alertCount} {t('activeAlerts')}
+                  </p>
                 </div>
               </div>
-              <div className="text-2xl font-bold text-white">{alertCount}</div>
+              <div className={`text-2xl font-bold ${
+                state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+              }`}>
+                {alertCount}
+              </div>
             </div>
           );
         })}
@@ -97,12 +127,24 @@ export default function EmergencyAlerts() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Create Alert Form */}
         {showCreateForm && (
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700 p-6">
-            <h2 className="text-xl font-semibold text-white mb-6">Create Emergency Alert</h2>
+          <div className={`backdrop-blur-sm rounded-xl border p-6 ${
+            state.preferences.theme === 'light' 
+              ? 'bg-white/70 border-gray-200' 
+              : 'bg-slate-800/50 border-slate-700'
+          }`}>
+            <h2 className={`text-xl font-semibold mb-6 ${
+              state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+            }`}>
+              {t('createEmergencyAlert')}
+            </h2>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Alert Type</label>
+                <label className={`block text-sm font-medium mb-2 ${
+                  state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
+                }`}>
+                  {t('alertType')}
+                </label>
                 <div className="grid grid-cols-3 gap-2">
                   {alertTypes.map((type) => {
                     const Icon = type.icon;
@@ -112,8 +154,12 @@ export default function EmergencyAlerts() {
                         onClick={() => setNewAlert({ ...newAlert, type: type.value as any })}
                         className={`flex flex-col items-center space-y-2 p-3 rounded-lg border transition-all duration-200 ${
                           newAlert.type === type.value
-                            ? 'bg-red-600/20 border-red-500 text-red-300'
-                            : 'bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700'
+                            ? state.preferences.theme === 'light'
+                              ? 'bg-red-100 border-red-300 text-red-700'
+                              : 'bg-red-600/20 border-red-500 text-red-300'
+                            : state.preferences.theme === 'light'
+                              ? 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+                              : 'bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-700'
                         }`}
                       >
                         <Icon className="w-5 h-5" />
@@ -125,36 +171,58 @@ export default function EmergencyAlerts() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Sender/Contact</label>
+                <label className={`block text-sm font-medium mb-2 ${
+                  state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
+                }`}>
+                  {t('senderContact')}
+                </label>
                 <input
                   type="text"
                   value={newAlert.sender}
                   onChange={(e) => setNewAlert({ ...newAlert, sender: e.target.value })}
-                  placeholder="e.g., Dr. Smith, Mom, Boss"
-                  className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                  placeholder={t('senderPlaceholder')}
+                  className={`w-full p-3 rounded-lg border focus:ring-1 transition-colors ${
+                    state.preferences.theme === 'light'
+                      ? 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-red-500 focus:ring-red-500'
+                      : 'bg-slate-700 border-slate-600 text-white placeholder-slate-400 focus:border-red-500 focus:ring-red-500'
+                  }`}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Message Content</label>
+                <label className={`block text-sm font-medium mb-2 ${
+                  state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
+                }`}>
+                  {t('messageContent')}
+                </label>
                 <textarea
                   value={newAlert.content}
                   onChange={(e) => setNewAlert({ ...newAlert, content: e.target.value })}
-                  placeholder="Emergency message content..."
-                  className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-red-500 focus:ring-1 focus:ring-red-500 resize-none"
+                  placeholder={t('emergencyMessageContent')}
+                  className={`w-full p-3 rounded-lg border focus:ring-1 resize-none transition-colors ${
+                    state.preferences.theme === 'light'
+                      ? 'bg-white border-gray-300 text-gray-900 placeholder-gray-400 focus:border-red-500 focus:ring-red-500'
+                      : 'bg-slate-700 border-slate-600 text-white placeholder-slate-400 focus:border-red-500 focus:ring-red-500'
+                  }`}
                   rows={3}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Schedule Time (Optional)
+                <label className={`block text-sm font-medium mb-2 ${
+                  state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
+                }`}>
+                  {t('scheduleTimeOptional')}
                 </label>
                 <input
                   type="datetime-local"
                   value={newAlert.scheduledTime}
                   onChange={(e) => setNewAlert({ ...newAlert, scheduledTime: e.target.value })}
-                  className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                  className={`w-full p-3 rounded-lg border focus:ring-1 transition-colors ${
+                    state.preferences.theme === 'light'
+                      ? 'bg-white border-gray-300 text-gray-900 focus:border-red-500 focus:ring-red-500'
+                      : 'bg-slate-700 border-slate-600 text-white focus:border-red-500 focus:ring-red-500'
+                  }`}
                 />
               </div>
 
@@ -164,13 +232,17 @@ export default function EmergencyAlerts() {
                   disabled={!newAlert.sender || !newAlert.content}
                   className="flex-1 px-4 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-lg font-medium hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Create Alert
+                  {t('createAlert')}
                 </button>
                 <button
                   onClick={() => setShowCreateForm(false)}
-                  className="px-4 py-3 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors"
+                  className={`px-4 py-3 rounded-lg transition-colors ${
+                    state.preferences.theme === 'light'
+                      ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                      : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                  }`}
                 >
-                  Cancel
+                  {t('cancel')}
                 </button>
               </div>
             </div>
@@ -178,41 +250,73 @@ export default function EmergencyAlerts() {
         )}
 
         {/* Active Alerts */}
-        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700 p-6">
-          <h2 className="text-xl font-semibold text-white mb-6">Active Alerts</h2>
+        <div className={`backdrop-blur-sm rounded-xl border p-6 ${
+          state.preferences.theme === 'light' 
+            ? 'bg-white/70 border-gray-200' 
+            : 'bg-slate-800/50 border-slate-700'
+        }`}>
+          <h2 className={`text-xl font-semibold mb-6 ${
+            state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+          }`}>
+            {t('activeAlerts')}
+          </h2>
           
           {state.emergencyAlerts.length > 0 ? (
             <div className="space-y-4">
               {state.emergencyAlerts.map((alert) => {
                 const Icon = getAlertIcon(alert.type);
                 return (
-                  <div key={alert.id} className="bg-slate-700/50 rounded-lg p-4 border border-slate-600">
+                  <div key={alert.id} className={`rounded-lg p-4 border ${
+                    state.preferences.theme === 'light' 
+                      ? 'bg-gray-50 border-gray-200' 
+                      : 'bg-slate-700/50 border-slate-600'
+                  }`}>
                     <div className="flex items-start space-x-3">
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                        alert.type === 'call' ? 'bg-red-600/20 text-red-400' :
-                        alert.type === 'text' ? 'bg-blue-600/20 text-blue-400' :
-                        'bg-green-600/20 text-green-400'
+                        alert.type === 'call' ? 
+                          state.preferences.theme === 'light' ? 'bg-red-100 text-red-600' : 'bg-red-600/20 text-red-400' :
+                        alert.type === 'text' ? 
+                          state.preferences.theme === 'light' ? 'bg-blue-100 text-blue-600' : 'bg-blue-600/20 text-blue-400' :
+                          state.preferences.theme === 'light' ? 'bg-green-100 text-green-600' : 'bg-green-600/20 text-green-400'
                       }`}>
                         <Icon className="w-5 h-5" />
                       </div>
                       
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-medium text-white">{alert.sender}</h3>
+                          <h3 className={`font-medium ${
+                            state.preferences.theme === 'light' ? 'text-gray-900' : 'text-white'
+                          }`}>
+                            {alert.sender}
+                          </h3>
                           <div className="flex items-center space-x-2">
-                            <button className="p-1 text-slate-400 hover:text-emerald-400 transition-colors">
+                            <button className={`p-1 transition-colors ${
+                              state.preferences.theme === 'light' 
+                                ? 'text-gray-600 hover:text-emerald-600' 
+                                : 'text-slate-400 hover:text-emerald-400'
+                            }`}>
                               <Play className="w-4 h-4" />
                             </button>
-                            <button className="p-1 text-slate-400 hover:text-red-400 transition-colors">
+                            <button className={`p-1 transition-colors ${
+                              state.preferences.theme === 'light' 
+                                ? 'text-gray-600 hover:text-red-600' 
+                                : 'text-slate-400 hover:text-red-400'
+                            }`}>
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
                         </div>
                         
-                        <p className="text-slate-300 text-sm mb-2">{alert.content}</p>
+                        <p className={`text-sm mb-2 ${
+                          state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
+                        }`}>
+                          {alert.content}
+                        </p>
                         
-                        <div className="flex items-center space-x-4 text-xs text-slate-400">
-                          <span className="capitalize">{alert.type}</span>
+                        <div className={`flex items-center space-x-4 text-xs ${
+                          state.preferences.theme === 'light' ? 'text-gray-500' : 'text-slate-400'
+                        }`}>
+                          <span className="capitalize">{t(alert.type)}</span>
                           {alert.scheduledTime && (
                             <div className="flex items-center space-x-1">
                               <Clock className="w-3 h-3" />
@@ -220,7 +324,7 @@ export default function EmergencyAlerts() {
                             </div>
                           )}
                           <div className={`w-2 h-2 rounded-full ${alert.isActive ? 'bg-emerald-400' : 'bg-slate-500'}`}></div>
-                          <span>{alert.isActive ? 'Active' : 'Inactive'}</span>
+                          <span>{alert.isActive ? t('active') : t('inactive')}</span>
                         </div>
                       </div>
                     </div>
@@ -230,14 +334,28 @@ export default function EmergencyAlerts() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <AlertTriangle className="w-16 h-16 text-slate-500 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-slate-300 mb-2">No Active Alerts</h3>
-              <p className="text-slate-400 mb-4">Create your first emergency alert to get started</p>
+              <AlertTriangle className={`w-16 h-16 mx-auto mb-4 ${
+                state.preferences.theme === 'light' ? 'text-gray-400' : 'text-slate-500'
+              }`} />
+              <h3 className={`text-lg font-medium mb-2 ${
+                state.preferences.theme === 'light' ? 'text-gray-700' : 'text-slate-300'
+              }`}>
+                {t('noActiveAlerts')}
+              </h3>
+              <p className={`mb-4 ${
+                state.preferences.theme === 'light' ? 'text-gray-500' : 'text-slate-400'
+              }`}>
+                {t('createFirstEmergencyAlert')}
+              </p>
               <button
                 onClick={() => setShowCreateForm(true)}
-                className="text-red-400 hover:text-red-300 transition-colors"
+                className={`transition-colors ${
+                  state.preferences.theme === 'light' 
+                    ? 'text-red-600 hover:text-red-700' 
+                    : 'text-red-400 hover:text-red-300'
+                }`}
               >
-                Create Alert
+                {t('createAlert')}
               </button>
             </div>
           )}
@@ -245,14 +363,25 @@ export default function EmergencyAlerts() {
       </div>
 
       {/* Warning */}
-      <div className="mt-8 p-4 bg-orange-600/20 border border-orange-500/50 rounded-lg">
+      <div className={`mt-8 p-4 rounded-lg border ${
+        state.preferences.theme === 'light'
+          ? 'bg-orange-50 border-orange-200'
+          : 'bg-orange-600/20 border-orange-500/50'
+      }`}>
         <div className="flex items-start space-x-3">
-          <AlertTriangle className="w-5 h-5 text-orange-400 mt-0.5" />
+          <AlertTriangle className={`w-5 h-5 mt-0.5 ${
+            state.preferences.theme === 'light' ? 'text-orange-600' : 'text-orange-400'
+          }`} />
           <div>
-            <h3 className="font-medium text-orange-300 mb-1">Important Notice</h3>
-            <p className="text-orange-200 text-sm">
-              Emergency alerts are simulated for demonstration purposes only. Do not use this feature for actual emergencies 
-              or to deceive others in harmful ways. Use responsibly and ethically.
+            <h3 className={`font-medium mb-1 ${
+              state.preferences.theme === 'light' ? 'text-orange-800' : 'text-orange-300'
+            }`}>
+              {t('importantNotice')}
+            </h3>
+            <p className={`text-sm ${
+              state.preferences.theme === 'light' ? 'text-orange-700' : 'text-orange-200'
+            }`}>
+              {t('emergencyAlertsDisclaimer')}
             </p>
           </div>
         </div>
